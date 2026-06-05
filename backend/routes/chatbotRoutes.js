@@ -165,11 +165,16 @@ const detectTaskCreationRequest = (question) => {
 
   return (
     q.includes("create task") ||
-    q.includes("add task") ||
-    q.includes("make task") ||
-    q.includes("assign task") ||
     q.includes("create a task") ||
-    q.includes("add a task")
+    q.includes("add task") ||
+    q.includes("add a task") ||
+    q.includes("make task") ||
+    q.includes("make a task") ||
+    q.includes("assign task") ||
+    q.includes("assign a task") ||
+    q.startsWith("create ") ||
+    q.startsWith("add ") ||
+    q.startsWith("assign ")
   );
 };
 
@@ -272,6 +277,7 @@ Rules:
 7. If the user asks what to do first, prioritize overdue tasks, high priority tasks, and nearest due dates.
 8. If the current user is an employee, do not imply access beyond the provided context.
 9. Format using Markdown headings and bullet points.
+10. If the user asks to create, add, make, or assign a task, do not claim the task was created. Task creation is handled by a separate confirmation flow.
 `;
 
   const userPrompt = `
@@ -547,7 +553,7 @@ router.post("/create-task", protect, async (req, res) => {
 
     for (const assigneeId of assigneeIds) {
       const notification = await Notification.create({
-        user: assigneeId,
+        recipient: assigneeId,
         title: "New Task Assigned",
         message: `${taskCode} - ${title}`,
         type: "task_assigned",
