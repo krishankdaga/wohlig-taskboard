@@ -102,15 +102,29 @@ const Board = () => {
   }, []);
 
   useEffect(() => {
-    socket.on("taskCreated", (newTask) => {
+    const refreshBoard = async () => {
+      try {
+        await fetchBoardData();
+      } catch (error) {
+        console.log("Could not refresh board after live update");
+      }
+    };
+
+    socket.on("connect", () => {
+      console.log("Board socket connected:", socket.id);
+    });
+
+    socket.on("taskCreated", async (newTask) => {
       setTasks((prev) => {
         const exists = prev.some((task) => task._id === newTask._id);
         if (exists) return prev;
         return [newTask, ...prev];
       });
+
+      await refreshBoard();
     });
 
-    socket.on("taskUpdated", (updatedTask) => {
+    socket.on("taskUpdated", async (updatedTask) => {
       setTasks((prev) =>
         prev.map((task) =>
           task._id === updatedTask._id ? updatedTask : task
@@ -120,25 +134,31 @@ const Board = () => {
       setSelectedTask((prev) =>
         prev && prev._id === updatedTask._id ? updatedTask : prev
       );
+
+      await refreshBoard();
     });
 
-    socket.on("taskDeleted", ({ taskId }) => {
+    socket.on("taskDeleted", async ({ taskId }) => {
       setTasks((prev) => prev.filter((task) => task._id !== taskId));
 
       setSelectedTask((prev) =>
         prev && prev._id === taskId ? null : prev
       );
+
+      await refreshBoard();
     });
 
-    socket.on("taskArchived", ({ taskId }) => {
+    socket.on("taskArchived", async ({ taskId }) => {
       setTasks((prev) => prev.filter((task) => task._id !== taskId));
 
       setSelectedTask((prev) =>
         prev && prev._id === taskId ? null : prev
       );
+
+      await refreshBoard();
     });
 
-    socket.on("taskRestored", (restoredTask) => {
+    socket.on("taskRestored", async (restoredTask) => {
       setTasks((prev) => {
         const exists = prev.some((task) => task._id === restoredTask._id);
         if (exists) {
@@ -149,16 +169,19 @@ const Board = () => {
 
         return [restoredTask, ...prev];
       });
+
+      await refreshBoard();
     });
 
     return () => {
+      socket.off("connect");
       socket.off("taskCreated");
       socket.off("taskUpdated");
       socket.off("taskDeleted");
       socket.off("taskArchived");
       socket.off("taskRestored");
     };
-  }, []);
+  }, [scope, projectFilter]);
 
   useEffect(() => {
     fetchTasks();
