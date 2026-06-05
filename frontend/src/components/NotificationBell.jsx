@@ -4,13 +4,13 @@ import socket from "../api/socket";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-const typeIcon = {
-  task_assigned: "✅",
-  task_comment: "💬",
-  direct_message: "📩",
-  project_message: "📣",
-  task_status: "🔄",
-  task_attachment: "📎"
+const typeLabel = {
+  task_assigned: "TA",
+  task_comment: "CM",
+  direct_message: "DM",
+  project_message: "PM",
+  task_status: "ST",
+  task_attachment: "AT"
 };
 
 const NotificationBell = () => {
@@ -121,9 +121,9 @@ const NotificationBell = () => {
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="relative h-11 w-11 rounded-2xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center"
+        className="relative h-11 w-11 rounded-2xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-xs font-black text-slate-700"
       >
-        🔔
+        NT
 
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-600 text-white text-[11px] font-black flex items-center justify-center">
@@ -155,7 +155,6 @@ const NotificationBell = () => {
           <div className="max-h-[520px] overflow-auto p-3">
             {notifications.length === 0 ? (
               <div className="p-10 text-center">
-                <p className="text-4xl mb-3">🔕</p>
                 <p className="font-black text-slate-700">
                   No notifications yet
                 </p>
@@ -173,8 +172,8 @@ const NotificationBell = () => {
                     }`}
                   >
                     <div className="flex gap-3">
-                      <div className="h-10 w-10 rounded-2xl bg-white border border-slate-200 flex items-center justify-center">
-                        {typeIcon[notification.type] || "🔔"}
+                      <div className="h-10 w-10 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-xs font-black text-slate-600">
+                        {typeLabel[notification.type] || "NT"}
                       </div>
 
                       <div className="flex-1">

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
@@ -9,13 +9,13 @@ import { useAuth } from "../context/AuthContext";
 const Messages = () => {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
-
-  const [users, setUsers] = useState([]);
-  const [projects, setProjects] = useState([]);
-  const [messages, setMessages] = useState([]);
+  const messagesEndRef = useRef(null);
 
   const [chatType, setChatType] = useState("direct");
   const [selectedId, setSelectedId] = useState("");
+  const [users, setUsers] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const [typingUsers, setTypingUsers] = useState({});
   const [typingTimeout, setTypingTimeout] = useState(null);
@@ -24,15 +24,12 @@ const Messages = () => {
     projectCounts: {}
   });
 
-  const selectedChatName = useMemo(() => {
-    if (!selectedId) return "Select a conversation";
-
-    if (chatType === "direct") {
-      return users.find((item) => item._id === selectedId)?.name || "Direct Chat";
-    }
-
-    return projects.find((item) => item._id === selectedId)?.name || "Project Chat";
-  }, [selectedId, chatType, users, projects]);
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end"
+    });
+  };
 
   const fetchBaseData = async () => {
     try {
@@ -61,10 +58,7 @@ const Messages = () => {
   };
 
   const fetchMessages = async () => {
-    if (!selectedId) {
-      setMessages([]);
-      return;
-    }
+    if (!selectedId) return;
 
     const endpoint =
       chatType === "direct"
@@ -105,7 +99,12 @@ const Messages = () => {
 
   useEffect(() => {
     fetchMessages();
+    setTypingUsers({});
   }, [selectedId, chatType]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, typingUsers]);
 
   useEffect(() => {
     socket.on("userTyping", (typingData) => {
@@ -203,30 +202,28 @@ const Messages = () => {
 
     socket.on("messageCreated", (newMessage) => {
       fetchUnreadSummary();
-      if (!selectedId) return;
 
-      if (newMessage.messageType === "direct" && chatType === "direct") {
-        const isCurrentConversation =
-          (newMessage.sender?._id === user._id && newMessage.receiver?._id === selectedId) ||
-          (newMessage.sender?._id === selectedId && newMessage.receiver?._id === user._id);
+      const isCurrentDirectChat =
+        chatType === "direct" &&
+        newMessage.messageType === "direct" &&
+        selectedId &&
+        (
+          newMessage.sender?._id === selectedId ||
+          newMessage.receiver?._id === selectedId
+        );
 
-        if (isCurrentConversation) {
-          setMessages((prev) => {
-            const exists = prev.some((message) => message._id === newMessage._id);
-            if (exists) return prev;
-            return [...prev, newMessage];
-          });
-        }
-      }
+      const isCurrentProjectChat =
+        chatType === "project" &&
+        newMessage.messageType === "project" &&
+        selectedId &&
+        newMessage.project?._id === selectedId;
 
-      if (newMessage.messageType === "project" && chatType === "project") {
-        if (newMessage.project?._id === selectedId) {
-          setMessages((prev) => {
-            const exists = prev.some((message) => message._id === newMessage._id);
-            if (exists) return prev;
-            return [...prev, newMessage];
-          });
-        }
+      if (isCurrentDirectChat || isCurrentProjectChat) {
+        setMessages((prev) => {
+          const exists = prev.some((message) => message._id === newMessage._id);
+          if (exists) return prev;
+          return [...prev, newMessage];
+        });
       }
     });
 
@@ -236,7 +233,7 @@ const Messages = () => {
       socket.off("messagesRead");
       socket.off("messageCreated");
     };
-  }, [selectedId, chatType, user]);
+  }, [selectedId, chatType, user?._id]);
 
   const handleTyping = (value) => {
     setText(value);
@@ -268,20 +265,24 @@ const Messages = () => {
   const sendMessage = async (e) => {
     e.preventDefault();
 
-    if (!selectedId || !text.trim()) return;
-
-    const endpoint =
-      chatType === "direct"
-        ? `/messages/direct/${selectedId}`
-        : `/messages/project/${selectedId}`;
+    if (!text.trim() || !selectedId) return;
 
     try {
-      const { data } = await API.post(endpoint, { text });
+      const endpoint =
+        chatType === "direct"
+          ? `/messages/direct/${selectedId}`
+          : `/messages/project/${selectedId}`;
+
+      const { data } = await API.post(endpoint, {
+        text
+      });
+
       setMessages((prev) => {
         const exists = prev.some((message) => message._id === data._id);
         if (exists) return prev;
         return [...prev, data];
       });
+
       socket.emit("stopTyping", {
         userId: user._id,
         userName: user.name,
@@ -308,21 +309,16 @@ const Messages = () => {
 
   const getDirectSeenText = (message) => {
     const readByUsers = getReadByUsers(message);
-
     if (readByUsers.length === 0) return "Sent";
-
     return "Seen";
   };
 
   const getProjectSeenText = (message) => {
     const readByUsers = getReadByUsers(message);
-
     if (readByUsers.length === 0) return "Sent";
-
     if (readByUsers.length === 1) {
       return `Read by ${readByUsers[0]?.name || "1 user"}`;
     }
-
     return `Read by ${readByUsers.length}`;
   };
 
@@ -330,35 +326,41 @@ const Messages = () => {
     setChatType(type);
     setSelectedId("");
     setMessages([]);
+    setTypingUsers({});
   };
 
+  const listItems = chatType === "direct" ? users : projects;
+  const selectedItem = listItems.find((item) => item._id === selectedId);
+
   return (
-    <div className="flex">
+    <div className="flex min-h-screen overflow-hidden">
       <Sidebar />
 
-      <main className="flex-1 min-h-screen">
+      <main className="flex-1 min-w-0 h-screen overflow-hidden flex flex-col">
         <Navbar />
 
-        <div className="p-4 md:p-8 pb-28 lg:pb-8 max-w-7xl mx-auto">
-          <section className="glass-card rounded-[32px] p-8 mb-8">
-            <p className="text-sm font-black text-blue-600 uppercase tracking-wider">
-              Team Communication
-            </p>
-            <h1 className="text-4xl font-black text-slate-900 mt-2 tracking-tight">
-              Messages
-            </h1>
-            <p className="text-slate-500 mt-3">
-              Send direct messages or discuss inside project channels.
-            </p>
-          </section>
+        <div className="flex-1 min-h-0 p-3 sm:p-4 md:p-6 lg:p-8 pb-28 lg:pb-8 max-w-7xl w-full mx-auto overflow-hidden">
+          <section className="h-full glass-card rounded-3xl md:rounded-[32px] overflow-hidden flex flex-col">
+            <div className="shrink-0 p-5 md:p-7 border-b border-slate-200 bg-white/80">
+              <p className="text-sm font-black text-blue-600 uppercase tracking-wider">
+                Communication
+              </p>
 
-          <section className="glass-card rounded-[32px] overflow-hidden">
-            <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] min-h-[680px]">
-              <aside className="border-b lg:border-b-0 lg:border-r border-slate-200 bg-white/70 p-5">
-                <div className="grid grid-cols-2 gap-2 mb-5">
+              <h1 className="text-2xl md:text-4xl font-black text-slate-900 mt-2">
+                Messages
+              </h1>
+
+              <p className="text-slate-500 mt-2 max-w-2xl text-sm md:text-base">
+                Communicate with employees directly or discuss work inside project channels.
+              </p>
+            </div>
+
+            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[340px_1fr]">
+              <aside className="shrink-0 bg-white/70 border-b lg:border-b-0 lg:border-r border-slate-200 p-4 md:p-5 max-h-[280px] lg:max-h-none overflow-hidden flex flex-col">
+                <div className="grid grid-cols-2 gap-2 mb-5 shrink-0">
                   <button
                     onClick={() => switchChatType("direct")}
-                    className={`rounded-2xl px-4 py-3 text-sm font-black ${
+                    className={`rounded-2xl py-3 text-sm font-black transition ${
                       chatType === "direct"
                         ? "bg-slate-900 text-white"
                         : "bg-slate-100 text-slate-600"
@@ -369,7 +371,7 @@ const Messages = () => {
 
                   <button
                     onClick={() => switchChatType("project")}
-                    className={`rounded-2xl px-4 py-3 text-sm font-black ${
+                    className={`rounded-2xl py-3 text-sm font-black transition ${
                       chatType === "project"
                         ? "bg-slate-900 text-white"
                         : "bg-slate-100 text-slate-600"
@@ -379,12 +381,12 @@ const Messages = () => {
                   </button>
                 </div>
 
-                <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-3">
+                <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-3 shrink-0">
                   {chatType === "direct" ? "Employees" : "Project Channels"}
                 </p>
 
-                <div className="space-y-2 max-h-[280px] lg:max-h-[560px] overflow-auto">
-                  {(chatType === "direct" ? users : projects).length === 0 && (
+                <div className="space-y-2 overflow-auto hide-scrollbar flex-1 pr-1">
+                  {listItems.length === 0 && (
                     <div className="rounded-2xl border border-dashed border-slate-300 p-5 text-center">
                       <p className="text-sm font-bold text-slate-400">
                         {chatType === "direct"
@@ -394,7 +396,7 @@ const Messages = () => {
                     </div>
                   )}
 
-                  {(chatType === "direct" ? users : projects).map((item) => {
+                  {listItems.map((item) => {
                     const unreadCount =
                       chatType === "direct"
                         ? unreadSummary.directCounts?.[item._id] || 0
@@ -413,12 +415,14 @@ const Messages = () => {
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <div className="h-9 w-9 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-black">
+                          <div className="h-9 w-9 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-black text-xs">
                             {item.name?.charAt(0)?.toUpperCase()}
                           </div>
 
                           <div className="flex-1 min-w-0">
-                            <p className="font-black text-sm truncate">{item.name}</p>
+                            <p className="font-black text-sm truncate">
+                              {item.name}
+                            </p>
                             <p className="text-xs opacity-60">
                               {chatType === "direct" ? item.role : "Project channel"}
                             </p>
@@ -436,135 +440,122 @@ const Messages = () => {
                 </div>
               </aside>
 
-              <div className="flex flex-col bg-slate-50/70">
-                <div className="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-6">
-                  <div>
-                    <p className="text-xs font-black text-slate-400 uppercase">
-                      {chatType === "direct" ? "Direct Message" : "Project Channel"}
-                    </p>
-                    <h2 className="text-xl font-black text-slate-900">
-                      {selectedChatName}
-                    </h2>
-                  </div>
+              <div className="min-h-0 flex flex-col bg-slate-50/60">
+                <div className="shrink-0 bg-white border-b border-slate-200 p-4 md:p-5">
+                  <p className="text-xs font-black text-blue-600 uppercase tracking-wider">
+                    {chatType === "direct" ? "Direct Message" : "Project Channel"}
+                  </p>
+
+                  <h2 className="text-xl md:text-2xl font-black text-slate-900 mt-1">
+                    {selectedItem?.name || "Select a conversation"}
+                  </h2>
                 </div>
 
-                <div className="flex-1 p-6 overflow-auto space-y-3">
-                  {!selectedId ? (
-                    <div className="h-full flex items-center justify-center">
-                      <div className="text-center">
-                        <p className="text-5xl mb-4">💬</p>
-                        <p className="font-black text-slate-800">
-                          Select a conversation
-                        </p>
-                        <p className="text-sm text-slate-500 mt-1">
-                          Choose a user or project channel from the left.
-                        </p>
-                      </div>
+                {!selectedId ? (
+                  <div className="flex-1 min-h-0 flex items-center justify-center p-8">
+                    <div className="max-w-md text-center">
+                      <p className="text-sm font-black text-slate-400 uppercase tracking-wider">
+                        No conversation selected
+                      </p>
+                      <h3 className="text-2xl font-black text-slate-900 mt-2">
+                        Choose a chat to begin
+                      </h3>
+                      <p className="text-slate-500 mt-2">
+                        Select an employee or project channel from the left panel.
+                      </p>
                     </div>
-                  ) : messages.length === 0 ? (
-                    <div className="h-full flex items-center justify-center">
-                      <div className="text-center">
-                        <p className="text-5xl mb-4">✨</p>
-                        <p className="font-black text-slate-800">
-                          No messages yet
-                        </p>
-                        <p className="text-sm text-slate-500 mt-1">
-                          Start the conversation below.
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    messages.map((message) => {
-                      const isMine = message.sender?._id === user._id;
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex-1 min-h-0 p-4 md:p-5 overflow-y-auto space-y-4">
+                      {messages.map((message) => {
+                        const isMine = message.sender?._id === user._id;
 
-                      return (
-                        <div
-                          key={message._id}
-                          className={`flex ${isMine ? "justify-end" : "justify-start"}`}
-                        >
+                        return (
                           <div
-                            className={`max-w-[70%] rounded-3xl px-5 py-3 border ${
-                              isMine
-                                ? "bg-blue-600 text-white border-blue-600"
-                                : "bg-white text-slate-800 border-slate-200"
-                            }`}
+                            key={message._id}
+                            className={`flex ${isMine ? "justify-end" : "justify-start"}`}
                           >
-                            <p
-                              className={`text-xs font-black mb-1 ${
-                                isMine ? "text-blue-100" : "text-slate-400"
-                              }`}
-                            >
-                              {message.sender?.name}
-                            </p>
-
-                            <p className="text-sm leading-relaxed">
-                              {message.text}
-                            </p>
-
                             <div
-                              className={`flex items-center gap-2 text-[11px] mt-2 ${
-                                isMine ? "text-blue-100" : "text-slate-400"
+                              className={`max-w-[92%] md:max-w-[72%] rounded-3xl px-5 py-4 border shadow-sm ${
+                                isMine
+                                  ? "bg-blue-600 text-white border-blue-600"
+                                  : "bg-white text-slate-800 border-slate-200"
                               }`}
                             >
-                              <span>
-                                {new Date(message.createdAt).toLocaleString("en-IN", {
-                                  day: "2-digit",
-                                  month: "short",
-                                  hour: "2-digit",
-                                  minute: "2-digit"
-                                })}
-                              </span>
+                              <p
+                                className={`text-xs font-black mb-2 ${
+                                  isMine ? "text-blue-100" : "text-slate-400"
+                                }`}
+                              >
+                                {message.sender?.name}
+                              </p>
 
-                              {isMine && (
-                                <>
-                                  <span>·</span>
-                                  <span>
-                                    {chatType === "direct"
-                                      ? getDirectSeenText(message)
-                                      : getProjectSeenText(message)}
-                                  </span>
-                                </>
-                              )}
+                              <p className="text-sm leading-relaxed">
+                                {message.text}
+                              </p>
+
+                              <div
+                                className={`flex items-center gap-2 text-[11px] mt-2 ${
+                                  isMine ? "text-blue-100" : "text-slate-400"
+                                }`}
+                              >
+                                <span>
+                                  {new Date(message.createdAt).toLocaleString("en-IN", {
+                                    day: "2-digit",
+                                    month: "short",
+                                    hour: "2-digit",
+                                    minute: "2-digit"
+                                  })}
+                                </span>
+
+                                {isMine && (
+                                  <>
+                                    <span>·</span>
+                                    <span>
+                                      {chatType === "direct"
+                                        ? getDirectSeenText(message)
+                                        : getProjectSeenText(message)}
+                                    </span>
+                                  </>
+                                )}
+                              </div>
                             </div>
                           </div>
+                        );
+                      })}
+
+                      {Object.keys(typingUsers).length > 0 && (
+                        <div className="flex justify-start">
+                          <div className="bg-white border border-slate-200 rounded-3xl px-5 py-3">
+                            <p className="text-xs font-bold text-blue-600">
+                              {Object.values(typingUsers).join(", ")}{" "}
+                              {Object.keys(typingUsers).length === 1 ? "is" : "are"} typing...
+                            </p>
+                          </div>
                         </div>
-                      );
-                    })
-                  )}
-                </div>
+                      )}
 
-                {Object.keys(typingUsers).length > 0 && (
-                  <div className="bg-white border-t border-slate-100 px-6 py-2">
-                    <p className="text-xs font-bold text-blue-600">
-                      {Object.values(typingUsers).join(", ")}{" "}
-                      {Object.keys(typingUsers).length === 1 ? "is" : "are"} typing...
-                    </p>
-                  </div>
+                      <div ref={messagesEndRef} />
+                    </div>
+
+                    <form
+                      onSubmit={sendMessage}
+                      className="shrink-0 bg-white border-t border-slate-200 p-3 md:p-4 flex gap-2 md:gap-3"
+                    >
+                      <input
+                        value={text}
+                        onChange={(e) => handleTyping(e.target.value)}
+                        placeholder="Write a message..."
+                        className="input-modern"
+                      />
+
+                      <button className="btn-primary whitespace-nowrap">
+                        Send
+                      </button>
+                    </form>
+                  </>
                 )}
-
-                <form
-                  onSubmit={sendMessage}
-                  className="bg-white border-t border-slate-200 p-5 flex gap-3"
-                >
-                  <input
-                    value={text}
-                    onChange={(e) => handleTyping(e.target.value)}
-                    placeholder={
-                      selectedId
-                        ? "Type your message..."
-                        : "Select a conversation first"
-                    }
-                    disabled={!selectedId}
-                    className="input-modern disabled:opacity-50"
-                  />
-
-                  <button
-                    disabled={!selectedId}
-                    className="btn-primary whitespace-nowrap disabled:opacity-50"
-                  >
-                    Send
-                  </button>
-                </form>
               </div>
             </div>
           </section>

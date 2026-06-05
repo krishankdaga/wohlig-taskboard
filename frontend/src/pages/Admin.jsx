@@ -436,15 +436,15 @@ const Admin = () => {
 
           <div className="flex gap-2 md:gap-3 mb-5 md:mb-6 overflow-x-auto hide-scrollbar pb-3 -mx-1 px-1">
             <button onClick={() => setActiveTab("project")} className={tabClass("project")}>
-              📁 Create Project
+               Create Project
             </button>
 
             <button onClick={() => setActiveTab("task")} className={tabClass("task")}>
-              ✅ Create Task
+               Create Task
             </button>
 
             <button onClick={() => setActiveTab("members")} className={tabClass("members")}>
-              👤 Project Members
+              Project Members
             </button>
 
             <button onClick={() => setActiveTab("manage")} className={tabClass("manage")}>
@@ -452,15 +452,15 @@ const Admin = () => {
             </button>
 
             <button onClick={() => setActiveTab("archived")} className={tabClass("archived")}>
-              🗄️ Archived Tasks
+               Archived Tasks
             </button>
 
             <button onClick={() => setActiveTab("reports")} className={tabClass("reports")}>
-              📤 Reports
+               Reports
             </button>
 
             <button onClick={() => setActiveTab("users")} className={tabClass("users")}>
-              👥 Manage Users
+               Manage Users
             </button>
           </div>
 
@@ -1003,7 +1003,7 @@ const Admin = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
                 <div className="bg-white border border-slate-100 rounded-2xl md:rounded-3xl p-4 md:p-6">
                   <div className="h-12 w-12 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center text-2xl mb-5">
-                    ✅
+                    
                   </div>
 
                   <h3 className="text-xl font-black text-slate-900">
@@ -1025,7 +1025,7 @@ const Admin = () => {
 
                 <div className="bg-white border border-slate-100 rounded-2xl md:rounded-3xl p-4 md:p-6">
                   <div className="h-12 w-12 rounded-2xl bg-red-50 text-red-700 flex items-center justify-center text-2xl mb-5">
-                    ⚠️
+                    
                   </div>
 
                   <h3 className="text-xl font-black text-slate-900">
@@ -1050,7 +1050,7 @@ const Admin = () => {
 
                 <div className="bg-white border border-slate-100 rounded-2xl md:rounded-3xl p-4 md:p-6">
                   <div className="h-12 w-12 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center text-2xl mb-5">
-                    🗄️
+                    
                   </div>
 
                   <h3 className="text-xl font-black text-slate-900">
@@ -1075,7 +1075,7 @@ const Admin = () => {
 
                 <div className="bg-white border border-slate-100 rounded-2xl md:rounded-3xl p-4 md:p-6">
                   <div className="h-12 w-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-2xl mb-5">
-                    👥
+                    
                   </div>
 
                   <h3 className="text-xl font-black text-slate-900">
@@ -1097,7 +1097,7 @@ const Admin = () => {
 
                 <div className="bg-white border border-slate-100 rounded-2xl md:rounded-3xl p-4 md:p-6">
                   <div className="h-12 w-12 rounded-2xl bg-violet-50 text-violet-700 flex items-center justify-center text-2xl mb-5">
-                    📁
+                    
                   </div>
 
                   <h3 className="text-xl font-black text-slate-900">

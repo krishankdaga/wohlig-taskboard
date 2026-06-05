@@ -10,10 +10,10 @@ import socket from "../api/socket";
 
 const statuses = [
   { id: "backlog", title: "Backlog", icon: "🧊" },
-  { id: "todo", title: "To Do", icon: "📝" },
-  { id: "in_progress", title: "In Progress", icon: "⚡" },
-  { id: "review", title: "Review", icon: "👀" },
-  { id: "closed", title: "Closed", icon: "✅" }
+  { id: "todo", title: "To Do", icon: "" },
+  { id: "in_progress", title: "In Progress", icon: "IP" },
+  { id: "review", title: "Review", icon: "RV" },
+  { id: "closed", title: "Closed", icon: "" }
 ];
 
 const formatFullDate = (date) => {
@@ -651,13 +651,13 @@ const Board = () => {
   const getFileIcon = (attachment) => {
     const type = attachment.fileType || "";
 
-    if (type.includes("pdf")) return "📄";
-    if (type.includes("word") || type.includes("document")) return "📝";
-    if (type.includes("spreadsheet") || type.includes("excel")) return "📊";
-    if (type.includes("presentation") || type.includes("powerpoint")) return "📽️";
-    if (type.includes("zip")) return "🗜️";
+    if (type.includes("pdf")) return "";
+    if (type.includes("word") || type.includes("document")) return "";
+    if (type.includes("spreadsheet") || type.includes("excel")) return "";
+    if (type.includes("presentation") || type.includes("powerpoint")) return "";
+    if (type.includes("zip")) return "";
 
-    return "📎";
+    return "";
   };
 
   const formatFileSize = (size) => {
@@ -986,7 +986,7 @@ const Board = () => {
                 onClick={() => setShowTaskModal(false)}
                 className="h-10 w-10 rounded-2xl bg-slate-100 hover:bg-slate-200"
               >
-                ✕
+                ×
               </button>
             </div>
 
@@ -1188,7 +1188,7 @@ const Board = () => {
                 }}
                 className="h-11 w-11 rounded-2xl bg-slate-100 hover:bg-slate-200 font-black"
               >
-                ✕
+                ×
               </button>
             </div>
 
@@ -1196,11 +1196,11 @@ const Board = () => {
               <div className="px-6 pt-4 border-b border-slate-200 bg-white">
                 <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-4">
                   {[
-                    { id: "overview", label: "Overview", icon: "📌" },
-                    { id: "checklist", label: "Checklist", icon: "☑️" },
-                    { id: "attachments", label: "Attachments", icon: "📎" },
-                    { id: "comments", label: "Comments", icon: "💬" },
-                    { id: "activity", label: "Activity", icon: "🕒" }
+                    { id: "overview", label: "Overview", icon: "" },
+                    { id: "checklist", label: "Checklist", icon: "" },
+                    { id: "attachments", label: "Attachments", icon: "" },
+                    { id: "comments", label: "Comments", icon: "" },
+                    { id: "activity", label: "Activity", icon: "" }
                   ].map((tab) => (
                     <button
                       key={tab.id}
@@ -1558,7 +1558,7 @@ const Board = () => {
                                     </div>
 
                                     <span className="text-xl">
-                                      {isImage ? "🖼️" : getFileIcon(attachment)}
+                                      {isImage ? "" : getFileIcon(attachment)}
                                     </span>
                                   </div>
 

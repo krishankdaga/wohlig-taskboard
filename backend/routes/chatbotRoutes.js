@@ -33,6 +33,78 @@ const getAccessibleProjectIds = async (user) => {
   return projects.map((project) => project._id);
 };
 
+const detectRequestedProject = async (question, user) => {
+  const q = (question || "").toLowerCase();
+  const accessibleProjectIds = await getAccessibleProjectIds(user);
+
+  const projects = await Project.find({
+    _id: { $in: accessibleProjectIds }
+  }).select("name");
+
+  const exactMatch = projects
+    .sort((a, b) => b.name.length - a.name.length)
+    .find((project) => q.includes(project.name.toLowerCase()));
+
+  if (exactMatch) {
+    return {
+      found: true,
+      project: exactMatch,
+      requestedName: exactMatch.name,
+      availableProjects: projects.map((project) => project.name)
+    };
+  }
+
+  const projectIntentWords = [
+    "project",
+    "under",
+    "in ",
+    "for ",
+    "summarize",
+    "summary",
+    "status report",
+    "report",
+    "training"
+  ];
+
+  const seemsProjectSpecific = projectIntentWords.some((word) =>
+    q.includes(word)
+  );
+
+  // Try to extract phrase after common project-intent words
+  const patterns = [
+    /(?:project|under|in|for|summarize|summary of|status report for|report for)\s+([a-z0-9\s\-_]+)/i
+  ];
+
+  let requestedName = "";
+
+  for (const pattern of patterns) {
+    const match = question.match(pattern);
+    if (match?.[1]) {
+      requestedName = match[1]
+        .replace(/[?.!,]/g, "")
+        .trim();
+      break;
+    }
+  }
+
+  // If user clearly mentioned a project-ish phrase but it is not in accessible projects
+  if (seemsProjectSpecific && requestedName && requestedName.length > 2) {
+    return {
+      found: false,
+      project: null,
+      requestedName,
+      availableProjects: projects.map((project) => project.name)
+    };
+  }
+
+  return {
+    found: null,
+    project: null,
+    requestedName: "",
+    availableProjects: projects.map((project) => project.name)
+  };
+};
+
 const buildWorkspaceContext = async (user) => {
   const accessibleProjectIds = await getAccessibleProjectIds(user);
 
@@ -152,12 +224,14 @@ You are the internal AI assistant for Wohlig TaskBoard.
 Rules:
 1. Answer only using the workspace data provided.
 2. If the answer is not available in the data, say you could not find it.
-3. Do not invent tasks, employees, projects, dates, or counts.
-4. Be concise but useful.
-5. For task answers, include task code, title, status, assignee, priority, and due date when relevant.
-6. If the user asks what to do first, prioritize overdue tasks, high priority tasks, and nearest due dates.
-7. If the current user is an employee, do not imply access beyond the provided context.
-8. Format lists clearly.
+3. Do not invent tasks, employees, projects, dates, reports, or counts.
+4. Never substitute one project for another. If the user asks about a project that is not present in the provided project list, say it was not found.
+5. If workspaceData.requestedProject is present, answer only for that exact project.
+6. Be concise but useful.
+7. For task answers, include task code, title, status, assignee, priority, and due date when relevant.
+8. If the user asks what to do first, prioritize overdue tasks, high priority tasks, and nearest due dates.
+9. If the current user is an employee, do not imply access beyond the provided context.
+10. Format using Markdown headings and bullet points.
 `;
 
   const userPrompt = `
@@ -279,7 +353,23 @@ router.post("/ask", protect, async (req, res) => {
       });
     }
 
+    const projectDetection = await detectRequestedProject(question, req.user);
+
+    if (projectDetection.found === false) {
+      return res.json({
+        answer:
+          `I could not find a project called "${projectDetection.requestedName}".\n\n` +
+          `Accessible projects are:\n` +
+          projectDetection.availableProjects.map((name) => `- ${name}`).join("\n"),
+        mode: "project_not_found"
+      });
+    }
+
     const context = await buildWorkspaceContext(req.user);
+
+    context.requestedProject = projectDetection.found
+      ? projectDetection.project.name
+      : null;
 
     const aiAnswer = await answerWithGroq(question, context);
 

@@ -12,10 +12,23 @@ const Sidebar = () => {
         : "text-slate-600 hover:bg-slate-100"
     }`;
 
+  const mobileNavClass = (path) =>
+    `flex flex-col items-center justify-center rounded-2xl py-2 text-[11px] font-black ${
+      location.pathname === path
+        ? "bg-slate-900 text-white"
+        : "text-slate-500"
+    }`;
+
+  const NavDot = ({ label }) => (
+    <span className="h-7 w-7 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-[10px] font-black text-slate-600">
+      {label}
+    </span>
+  );
+
   return (
     <>
-      <aside className="hidden lg:flex w-72 min-h-screen bg-white/80 backdrop-blur-xl border-r border-slate-200 p-5 flex-col sticky top-0">
-        <div className="flex items-center gap-3 mb-8">
+      <aside className="hidden lg:flex w-72 h-screen bg-white/80 backdrop-blur-xl border-r border-slate-200 p-5 flex-col sticky top-0 shrink-0 overflow-hidden">
+        <div className="flex items-center gap-3 mb-8 shrink-0">
           <div className="bg-white rounded-2xl p-2 shadow-sm border border-slate-100">
             <img
               src="/wohlig-logo.png"
@@ -25,36 +38,36 @@ const Sidebar = () => {
           </div>
         </div>
 
-        <nav className="space-y-2">
+        <nav className="space-y-2 overflow-auto hide-scrollbar pr-1 flex-1">
           <Link to="/dashboard" className={navClass("/dashboard")}>
-            <span>📊</span>
+            <NavDot label="DB" />
             <span>Dashboard</span>
           </Link>
 
           <Link to="/board" className={navClass("/board")}>
-            <span>📋</span>
+            <NavDot label="KB" />
             <span>Kanban Board</span>
           </Link>
 
           <Link to="/messages" className={navClass("/messages")}>
-            <span>💬</span>
+            <NavDot label="MS" />
             <span>Messages</span>
           </Link>
 
           <Link to="/chatbot" className={navClass("/chatbot")}>
-            <span>🤖</span>
-            <span>Chatbot</span>
+            <NavDot label="AI" />
+            <span>Assistant</span>
           </Link>
 
           {user?.role === "admin" && (
             <Link to="/admin" className={navClass("/admin")}>
-              <span>⚙️</span>
+              <NavDot label="AD" />
               <span>Admin Panel</span>
             </Link>
           )}
         </nav>
 
-        <div className="mt-auto rounded-3xl bg-slate-50 border border-slate-200 p-4">
+        <div className="shrink-0 mt-5 rounded-3xl bg-slate-50 border border-slate-200 p-4">
           <p className="text-xs font-black text-slate-400 uppercase">
             Logged in as
           </p>
@@ -68,61 +81,35 @@ const Sidebar = () => {
       </aside>
 
       <div className="lg:hidden fixed bottom-4 left-4 right-4 z-40 bg-white/90 backdrop-blur-xl border border-slate-200 shadow-2xl rounded-3xl p-2">
-        <div className="grid grid-cols-4 gap-2">
-          <Link
-            to="/dashboard"
-            className={`flex flex-col items-center justify-center rounded-2xl py-2 text-xs font-black ${
-              location.pathname === "/dashboard"
-                ? "bg-slate-900 text-white"
-                : "text-slate-500"
-            }`}
-          >
-            <span className="text-lg">📊</span>
+        <div className="grid grid-cols-5 gap-1">
+          <Link to="/dashboard" className={mobileNavClass("/dashboard")}>
+            <span>DB</span>
             <span>Home</span>
           </Link>
 
-          <Link
-            to="/board"
-            className={`flex flex-col items-center justify-center rounded-2xl py-2 text-xs font-black ${
-              location.pathname === "/board"
-                ? "bg-slate-900 text-white"
-                : "text-slate-500"
-            }`}
-          >
-            <span className="text-lg">📋</span>
+          <Link to="/board" className={mobileNavClass("/board")}>
+            <span>KB</span>
             <span>Board</span>
           </Link>
 
-          <Link
-            to="/messages"
-            className={`flex flex-col items-center justify-center rounded-2xl py-2 text-xs font-black ${
-              location.pathname === "/messages"
-                ? "bg-slate-900 text-white"
-                : "text-slate-500"
-            }`}
-          >
-            <span className="text-lg">💬</span>
+          <Link to="/messages" className={mobileNavClass("/messages")}>
+            <span>MS</span>
             <span>Chat</span>
           </Link>
 
+          <Link to="/chatbot" className={mobileNavClass("/chatbot")}>
+            <span>AI</span>
+            <span>AI</span>
+          </Link>
+
           {user?.role === "admin" ? (
-            <Link
-              to="/admin"
-              className={`flex flex-col items-center justify-center rounded-2xl py-2 text-xs font-black ${
-                location.pathname === "/admin"
-                  ? "bg-slate-900 text-white"
-                  : "text-slate-500"
-              }`}
-            >
-              <span className="text-lg">⚙️</span>
+            <Link to="/admin" className={mobileNavClass("/admin")}>
+              <span>AD</span>
               <span>Admin</span>
             </Link>
           ) : (
-            <Link
-              to="/board"
-              className="flex flex-col items-center justify-center rounded-2xl py-2 text-xs font-black text-slate-500"
-            >
-              <span className="text-lg">✅</span>
+            <Link to="/board" className={mobileNavClass("/tasks")}>
+              <span>TK</span>
               <span>Tasks</span>
             </Link>
           )}

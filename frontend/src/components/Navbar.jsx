@@ -50,10 +50,14 @@ const Navbar = () => {
           onClick={() => setIsSearchOpen(true)}
           className="hidden xl:flex items-center gap-3 w-[420px] bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-2xl px-4 py-3 text-left transition"
         >
-          <span>🔎</span>
+          <span className="h-7 w-7 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-xs font-black text-slate-500">
+            S
+          </span>
+
           <span className="text-sm font-semibold text-slate-500">
             Search tasks, projects, users, messages...
           </span>
+
           <span className="ml-auto text-xs bg-white px-2 py-1 rounded-lg text-slate-400 font-bold">
             ⌘K
           </span>
@@ -62,9 +66,9 @@ const Navbar = () => {
         <div className="flex items-center gap-2 md:gap-4">
           <button
             onClick={() => setIsSearchOpen(true)}
-            className="h-10 w-10 rounded-2xl bg-slate-100 hover:bg-slate-200"
+            className="h-10 w-10 rounded-2xl bg-slate-100 hover:bg-slate-200 text-xs font-black text-slate-600"
           >
-            🔎
+            S
           </button>
 
           <NotificationBell />

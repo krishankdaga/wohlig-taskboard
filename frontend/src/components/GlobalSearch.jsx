@@ -91,14 +91,14 @@ const GlobalSearch = ({ isOpen, onClose }) => {
             onClick={onClose}
             className="h-12 w-12 rounded-2xl bg-slate-100 hover:bg-slate-200 font-black"
           >
-            ✕
+            ×
           </button>
         </div>
 
         <div className="p-6 max-h-[70vh] overflow-auto">
           {!query.trim() ? (
             <div className="text-center py-16">
-              <p className="text-5xl mb-4">🔎</p>
+              <p className="text-5xl mb-4"></p>
               <p className="font-black text-slate-800">
                 Start typing to search your workspace
               </p>
@@ -112,7 +112,7 @@ const GlobalSearch = ({ isOpen, onClose }) => {
             </div>
           ) : totalResults === 0 ? (
             <div className="text-center py-16">
-              <p className="text-5xl mb-4">😶</p>
+              <p className="text-5xl mb-4"></p>
               <p className="font-black text-slate-800">No results found</p>
               <p className="text-sm text-slate-500 mt-1">
                 Try another keyword.
