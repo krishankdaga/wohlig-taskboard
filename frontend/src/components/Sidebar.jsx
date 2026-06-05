@@ -41,6 +41,11 @@ const Sidebar = () => {
             <span>Messages</span>
           </Link>
 
+          <Link to="/chatbot" className={navClass("/chatbot")}>
+            <span>🤖</span>
+            <span>Chatbot</span>
+          </Link>
+
           {user?.role === "admin" && (
             <Link to="/admin" className={navClass("/admin")}>
               <span>⚙️</span>

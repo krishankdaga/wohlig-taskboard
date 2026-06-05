@@ -5,6 +5,7 @@ import Board from "./pages/Board";
 import Admin from "./pages/Admin";
 import Dashboard from "./pages/Dashboard";
 import Messages from "./pages/Messages";
+import Chatbot from "./pages/Chatbot";
 
 const ProtectedRoute = ({ children }) => {
   const { user } = useAuth();
@@ -60,6 +61,15 @@ const App = () => {
           element={
             <ProtectedRoute>
               <Messages />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/chatbot"
+          element={
+            <ProtectedRoute>
+              <Chatbot />
             </ProtectedRoute>
           }
         />

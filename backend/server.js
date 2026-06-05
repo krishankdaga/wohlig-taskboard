@@ -14,6 +14,7 @@ const messageRoutes = require("./routes/messageRoutes");
 const searchRoutes = require("./routes/searchRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const reportRoutes = require("./routes/reportRoutes");
+const chatbotRoutes = require("./routes/chatbotRoutes");
 
 dotenv.config();
 connectDB();
@@ -82,6 +83,7 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/chatbot", chatbotRoutes);
 
 const PORT = process.env.PORT || 5001;
 
