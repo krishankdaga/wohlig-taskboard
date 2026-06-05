@@ -25,6 +25,8 @@ const AdminAnalytics = () => {
   const [data, setData] = useState(null);
   const [activeTab, setActiveTab] = useState("employees");
   const [loading, setLoading] = useState(true);
+  const [sendingReminders, setSendingReminders] = useState(false);
+  const [reminderResult, setReminderResult] = useState(null);
 
   const fetchAnalytics = async () => {
     try {
@@ -35,6 +37,29 @@ const AdminAnalytics = () => {
       alert(error.response?.data?.message || "Could not load analytics");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const sendOverdueReminders = async () => {
+    const confirmSend = window.confirm(
+      "Send overdue task reminders to all assigned employees?"
+    );
+
+    if (!confirmSend) return;
+
+    try {
+      setSendingReminders(true);
+      setReminderResult(null);
+
+      const { data } = await API.post("/reminders/overdue");
+
+      setReminderResult(data);
+
+      await fetchAnalytics();
+    } catch (error) {
+      alert(error.response?.data?.message || "Could not send reminders");
+    } finally {
+      setSendingReminders(false);
     }
   };
 
@@ -92,14 +117,65 @@ const AdminAnalytics = () => {
                 </p>
               </div>
 
-              <button
-                onClick={fetchAnalytics}
-                className="px-5 py-3 rounded-2xl bg-white dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 text-sm font-black text-slate-600 dark:text-neutral-300"
-              >
-                Refresh
-              </button>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={sendOverdueReminders}
+                  disabled={sendingReminders}
+                  className="px-5 py-3 rounded-2xl bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900 text-sm font-black text-red-600 dark:text-red-300 disabled:opacity-50"
+                >
+                  {sendingReminders ? "Sending..." : "Send Overdue Reminders"}
+                </button>
+
+                <button
+                  onClick={fetchAnalytics}
+                  className="px-5 py-3 rounded-2xl bg-white dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 text-sm font-black text-slate-600 dark:text-neutral-300"
+                >
+                  Refresh
+                </button>
+              </div>
             </div>
           </section>
+
+          {reminderResult && (
+            <section className="rounded-3xl bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900 p-5 mb-6">
+              <p className="text-sm font-black text-red-600 dark:text-red-300 uppercase tracking-wider">
+                Overdue Reminder Result
+              </p>
+
+              <p className="text-slate-800 dark:text-neutral-200 font-bold mt-2">
+                {reminderResult.message}
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4">
+                <div className="rounded-2xl bg-white dark:bg-neutral-950 border border-red-100 dark:border-red-900 p-4">
+                  <p className="text-xs font-black text-slate-400 uppercase">
+                    Overdue Tasks
+                  </p>
+                  <p className="text-2xl font-black text-red-600 mt-1">
+                    {reminderResult.overdueTasks}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl bg-white dark:bg-neutral-950 border border-red-100 dark:border-red-900 p-4">
+                  <p className="text-xs font-black text-slate-400 uppercase">
+                    Notifications Sent
+                  </p>
+                  <p className="text-2xl font-black text-red-600 mt-1">
+                    {reminderResult.notificationsSent}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl bg-white dark:bg-neutral-950 border border-red-100 dark:border-red-900 p-4">
+                  <p className="text-xs font-black text-slate-400 uppercase">
+                    Users Notified
+                  </p>
+                  <p className="text-2xl font-black text-red-600 mt-1">
+                    {reminderResult.usersNotified}
+                  </p>
+                </div>
+              </div>
+            </section>
+          )}
 
           <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-8 gap-4 mb-6">
             <StatCard label="Users" value={data?.summary?.totalUsers || 0} />
