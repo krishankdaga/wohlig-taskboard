@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import API from "../api/axios";
 
 const AdminUserProfile = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const [profile, setProfile] = useState(null);
   const [allProjects, setAllProjects] = useState([]);
@@ -100,6 +101,13 @@ const AdminUserProfile = () => {
 
         <div className="p-4 md:p-8 pb-28 lg:pb-8 max-w-7xl mx-auto">
           <section className="glass-card rounded-3xl md:rounded-[32px] p-6 md:p-8 mb-6">
+            <button
+              onClick={() => navigate("/admin")}
+              className="mb-5 px-4 py-2 rounded-2xl bg-white dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 text-sm font-black text-slate-600 dark:text-neutral-300 hover:bg-slate-50 dark:hover:bg-neutral-900"
+            >
+              Back to Admin Panel
+            </button>
+
             <p className="text-sm font-black text-blue-600 uppercase tracking-wider">
               Employee Profile
             </p>

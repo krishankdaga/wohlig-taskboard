@@ -9,7 +9,7 @@ import { useAuth } from "../context/AuthContext";
 import socket from "../api/socket";
 
 const statuses = [
-  { id: "backlog", title: "Backlog", icon: "🧊" },
+  { id: "backlog", title: "Backlog", icon: "" },
   { id: "todo", title: "To Do", icon: "" },
   { id: "in_progress", title: "In Progress", icon: "" },
   { id: "review", title: "Review", icon: "" },
@@ -940,9 +940,6 @@ const Board = () => {
                       >
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-2">
-                            <span className="h-9 w-9 rounded-2xl bg-slate-100 dark:bg-neutral-900 flex items-center justify-center">
-                              {status.icon}
-                            </span>
                             <h2 className="text-sm font-black text-slate-800 dark:text-neutral-100 uppercase">
                               {status.title}
                             </h2>

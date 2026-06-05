@@ -43,6 +43,14 @@ const Sidebar = () => {
             Kanban Board
           </Link>
 
+          <Link to="/my-work" className={navClass("/my-work")}>
+            My Work
+          </Link>
+
+          <Link to="/calendar" className={navClass("/calendar")}>
+            Calendar
+          </Link>
+
           <Link to="/messages" className={navClass("/messages")}>
             Messages
           </Link>

@@ -26,6 +26,7 @@ const Chatbot = () => {
 
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
+  const [pendingTaskDraft, setPendingTaskDraft] = useState(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({
@@ -59,6 +60,12 @@ const Chatbot = () => {
         question: finalQuestion
       });
 
+      if (data.mode === "task_draft" && data.taskDraft) {
+        setPendingTaskDraft(data.taskDraft);
+      } else {
+        setPendingTaskDraft(null);
+      }
+
       setMessages((prev) => [
         ...prev,
         {
@@ -79,6 +86,59 @@ const Chatbot = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const createTaskFromDraft = async () => {
+    if (!pendingTaskDraft) return;
+
+    try {
+      setLoading(true);
+
+      const { data } = await API.post("/chatbot/create-task", {
+        title: pendingTaskDraft.title,
+        description: pendingTaskDraft.description,
+        projectId: pendingTaskDraft.projectId,
+        assigneeIds: pendingTaskDraft.assigneeIds,
+        priority: pendingTaskDraft.priority,
+        status: pendingTaskDraft.status,
+        dueDate: pendingTaskDraft.dueDate,
+        labels: pendingTaskDraft.labels || []
+      });
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "bot",
+          text: `Task created successfully: ${data.taskCode} - ${data.title}`
+        }
+      ]);
+
+      setPendingTaskDraft(null);
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "bot",
+          text:
+            error.response?.data?.message ||
+            "Could not create the task from this draft."
+        }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const cancelTaskDraft = () => {
+    setPendingTaskDraft(null);
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "bot",
+        text: "Task creation cancelled."
+      }
+    ]);
   };
 
   return (
@@ -167,6 +227,34 @@ const Chatbot = () => {
 
                   <div ref={messagesEndRef} />
                 </div>
+
+                {pendingTaskDraft && (
+                  <div className="shrink-0 bg-white dark:bg-neutral-950 border-t border-slate-200 dark:border-neutral-800 p-3 md:p-4">
+                    <div className="rounded-2xl border border-blue-100 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/20 p-4">
+                      <p className="text-sm font-black text-blue-700 dark:text-blue-300">
+                        Task draft ready for confirmation
+                      </p>
+
+                      <div className="flex flex-col sm:flex-row gap-2 mt-3">
+                        <button
+                          type="button"
+                          onClick={createTaskFromDraft}
+                          className="btn-primary"
+                        >
+                          Create Task
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={cancelTaskDraft}
+                          className="px-4 py-2 rounded-2xl border border-slate-200 dark:border-neutral-800 text-slate-600 dark:text-neutral-300 font-black"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <form
                   onSubmit={(e) => {

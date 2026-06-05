@@ -7,6 +7,8 @@ import Dashboard from "./pages/Dashboard";
 import Messages from "./pages/Messages";
 import Chatbot from "./pages/Chatbot";
 import Profile from "./pages/Profile";
+import MyWork from "./pages/MyWork";
+import Calendar from "./pages/Calendar";
 import AdminUserProfile from "./pages/AdminUserProfile";
 
 const ProtectedRoute = ({ children }) => {
@@ -81,6 +83,24 @@ const App = () => {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/my-work"
+          element={
+            <ProtectedRoute>
+              <MyWork />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/calendar"
+          element={
+            <ProtectedRoute>
+              <Calendar />
             </ProtectedRoute>
           }
         />

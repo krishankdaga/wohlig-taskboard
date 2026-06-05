@@ -2,6 +2,7 @@ const express = require("express");
 const Task = require("../models/Task");
 const Project = require("../models/Project");
 const User = require("../models/User");
+const Notification = require("../models/Notification");
 const { protect } = require("../middleware/authMiddleware");
 
 const router = express.Router();
@@ -33,76 +34,16 @@ const getAccessibleProjectIds = async (user) => {
   return projects.map((project) => project._id);
 };
 
-const detectRequestedProject = async (question, user) => {
-  const q = (question || "").toLowerCase();
-  const accessibleProjectIds = await getAccessibleProjectIds(user);
+const isProjectLeadForProject = async (projectId, user) => {
+  if (user.role === "admin") return true;
 
-  const projects = await Project.find({
-    _id: { $in: accessibleProjectIds }
-  }).select("name");
+  const project = await Project.findById(projectId);
 
-  const exactMatch = projects
-    .sort((a, b) => b.name.length - a.name.length)
-    .find((project) => q.includes(project.name.toLowerCase()));
+  if (!project) return false;
 
-  if (exactMatch) {
-    return {
-      found: true,
-      project: exactMatch,
-      requestedName: exactMatch.name,
-      availableProjects: projects.map((project) => project.name)
-    };
-  }
-
-  const projectIntentWords = [
-    "project",
-    "under",
-    "in ",
-    "for ",
-    "summarize",
-    "summary",
-    "status report",
-    "report",
-    "training"
-  ];
-
-  const seemsProjectSpecific = projectIntentWords.some((word) =>
-    q.includes(word)
+  return (project.projectLeads || []).some(
+    (lead) => lead.user.toString() === user._id.toString()
   );
-
-  // Try to extract phrase after common project-intent words
-  const patterns = [
-    /(?:project|under|in|for|summarize|summary of|status report for|report for)\s+([a-z0-9\s\-_]+)/i
-  ];
-
-  let requestedName = "";
-
-  for (const pattern of patterns) {
-    const match = question.match(pattern);
-    if (match?.[1]) {
-      requestedName = match[1]
-        .replace(/[?.!,]/g, "")
-        .trim();
-      break;
-    }
-  }
-
-  // If user clearly mentioned a project-ish phrase but it is not in accessible projects
-  if (seemsProjectSpecific && requestedName && requestedName.length > 2) {
-    return {
-      found: false,
-      project: null,
-      requestedName,
-      availableProjects: projects.map((project) => project.name)
-    };
-  }
-
-  return {
-    found: null,
-    project: null,
-    requestedName: "",
-    availableProjects: projects.map((project) => project.name)
-  };
 };
 
 const buildWorkspaceContext = async (user) => {
@@ -165,12 +106,17 @@ const buildWorkspaceContext = async (user) => {
 
   const projectSummaries = projects.map((project) => {
     return {
+      id: project._id.toString(),
       name: project.name,
       parentProject: project.parentProject?.name || "Main project",
       description: project.description || "No description",
       members:
-        project.members?.map((member) => `${member.name} (${member.role})`).join(", ") ||
-        "No members"
+        project.members?.map((member) => ({
+          id: member._id.toString(),
+          name: member.name,
+          email: member.email,
+          role: member.role
+        })) || []
     };
   });
 
@@ -205,12 +151,107 @@ const buildWorkspaceContext = async (user) => {
     users:
       user.role === "admin"
         ? visibleUsers.map((u) => ({
+            id: u._id.toString(),
             name: u.name,
             email: u.email,
             role: u.role
           }))
         : "User list is hidden for employees except project/task context."
   };
+};
+
+const detectTaskCreationRequest = (question) => {
+  const q = question.toLowerCase();
+
+  return (
+    q.includes("create task") ||
+    q.includes("add task") ||
+    q.includes("make task") ||
+    q.includes("assign task") ||
+    q.includes("create a task") ||
+    q.includes("add a task")
+  );
+};
+
+const extractTaskDraftWithGroq = async (question, context) => {
+  if (!process.env.GROQ_API_KEY) return null;
+
+  const prompt = `
+You extract task creation details from a user's request.
+
+Return ONLY valid JSON. No markdown. No explanation.
+
+Available projects:
+${JSON.stringify(context.projects, null, 2)}
+
+Available users:
+${JSON.stringify(context.users, null, 2)}
+
+User request:
+${question}
+
+Rules:
+1. Match project by exact or closest available project name.
+2. Match assignees by available user name or email.
+3. If due date is relative, convert it approximately using today's date: ${new Date().toISOString().slice(0, 10)}.
+4. Priority must be one of: low, medium, high.
+5. Status must be one of: backlog, todo, in_progress, review, closed.
+6. If something is missing, use a sensible default.
+7. Return this JSON shape:
+{
+  "title": "",
+  "description": "",
+  "projectName": "",
+  "projectId": "",
+  "assigneeNames": [],
+  "assigneeIds": [],
+  "priority": "medium",
+  "status": "backlog",
+  "dueDate": "",
+  "labels": []
+}
+`;
+
+  const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model: "llama-3.1-8b-instant",
+      messages: [
+        {
+          role: "system",
+          content: "You are a strict JSON extraction assistant. Return only valid JSON."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      temperature: 0.1,
+      max_tokens: 600
+    })
+  });
+
+  if (!response.ok) {
+    console.log("Groq extract error:", await response.text());
+    return null;
+  }
+
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+
+  if (!content) return null;
+
+  try {
+    const cleaned = content.replace(/```json/g, "").replace(/```/g, "").trim();
+    return JSON.parse(cleaned);
+  } catch (error) {
+    console.log("Could not parse task draft:", content);
+    return null;
+  }
 };
 
 const answerWithGroq = async (question, context) => {
@@ -225,13 +266,12 @@ Rules:
 1. Answer only using the workspace data provided.
 2. If the answer is not available in the data, say you could not find it.
 3. Do not invent tasks, employees, projects, dates, reports, or counts.
-4. Never substitute one project for another. If the user asks about a project that is not present in the provided project list, say it was not found.
-5. If workspaceData.requestedProject is present, answer only for that exact project.
-6. Be concise but useful.
-7. For task answers, include task code, title, status, assignee, priority, and due date when relevant.
-8. If the user asks what to do first, prioritize overdue tasks, high priority tasks, and nearest due dates.
-9. If the current user is an employee, do not imply access beyond the provided context.
-10. Format using Markdown headings and bullet points.
+4. Never substitute one project for another.
+5. Be concise but useful.
+6. For task answers, include task code, title, status, assignee, priority, and due date when relevant.
+7. If the user asks what to do first, prioritize overdue tasks, high priority tasks, and nearest due dates.
+8. If the current user is an employee, do not imply access beyond the provided context.
+9. Format using Markdown headings and bullet points.
 `;
 
   const userPrompt = `
@@ -312,7 +352,9 @@ const fallbackAnswer = (question, context) => {
     return `Accessible projects:\n\n${context.projects
       .map(
         (project, index) =>
-          `${index + 1}. ${project.name}\nParent: ${project.parentProject}\nMembers: ${project.members}`
+          `${index + 1}. ${project.name}\nParent: ${project.parentProject}\nMembers: ${
+            project.members?.map((m) => m.name).join(", ") || "No members"
+          }`
       )
       .join("\n\n")}`;
   }
@@ -336,11 +378,26 @@ const fallbackAnswer = (question, context) => {
     "Try asking:\n" +
     "- Which tasks are overdue?\n" +
     "- What should I work on first?\n" +
-    "- Summarize Project Genesis.\n" +
-    "- Who is assigned to GenAI Training?\n" +
+    "- Summarize a project\n" +
+    "- Who is assigned to a project?\n" +
     "- Which employee has the most pending tasks?\n" +
-    "- What is my latest deadline?"
+    "- Create a high priority task for Employee One under project2 due tomorrow: Complete testing"
   );
+};
+
+const generateTaskCode = async () => {
+  const lastTask = await Task.findOne({
+    taskCode: { $regex: /^WOH-/ }
+  }).sort({ createdAt: -1 });
+
+  if (!lastTask?.taskCode) {
+    return "WOH-001";
+  }
+
+  const lastNumber = Number(lastTask.taskCode.split("-")[1]) || 0;
+  const nextNumber = lastNumber + 1;
+
+  return `WOH-${String(nextNumber).padStart(3, "0")}`;
 };
 
 router.post("/ask", protect, async (req, res) => {
@@ -353,23 +410,41 @@ router.post("/ask", protect, async (req, res) => {
       });
     }
 
-    const projectDetection = await detectRequestedProject(question, req.user);
-
-    if (projectDetection.found === false) {
-      return res.json({
-        answer:
-          `I could not find a project called "${projectDetection.requestedName}".\n\n` +
-          `Accessible projects are:\n` +
-          projectDetection.availableProjects.map((name) => `- ${name}`).join("\n"),
-        mode: "project_not_found"
-      });
-    }
-
     const context = await buildWorkspaceContext(req.user);
 
-    context.requestedProject = projectDetection.found
-      ? projectDetection.project.name
-      : null;
+    if (detectTaskCreationRequest(question)) {
+      if (req.user.role !== "admin") {
+        return res.json({
+          answer:
+            "I can prepare task creation only for admins right now. Please ask an admin to create this task.",
+          mode: "task_create_denied"
+        });
+      }
+
+      const draft = await extractTaskDraftWithGroq(question, context);
+
+      if (!draft || !draft.title || !draft.projectId || !draft.assigneeIds?.length) {
+        return res.json({
+          answer:
+            "I understood that you want to create a task, but I could not confidently identify the title, project, and assignee. Please include project name and employee name.",
+          mode: "task_draft_failed"
+        });
+      }
+
+      return res.json({
+        answer:
+          `I prepared this task draft:\n\n` +
+          `Title: ${draft.title}\n` +
+          `Project: ${draft.projectName}\n` +
+          `Assignees: ${(draft.assigneeNames || []).join(", ")}\n` +
+          `Priority: ${draft.priority}\n` +
+          `Status: ${draft.status}\n` +
+          `Due Date: ${draft.dueDate || "No due date"}\n\n` +
+          `Confirm to create this task.`,
+        mode: "task_draft",
+        taskDraft: draft
+      });
+    }
 
     const aiAnswer = await answerWithGroq(question, context);
 
@@ -390,6 +465,103 @@ router.post("/ask", protect, async (req, res) => {
     res.status(500).json({
       answer: "Something went wrong while answering your question.",
       error: error.message
+    });
+  }
+});
+
+router.post("/create-task", protect, async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        message: "Only admin can create tasks from assistant"
+      });
+    }
+
+    const {
+      title,
+      description,
+      projectId,
+      assigneeIds,
+      priority,
+      status,
+      dueDate,
+      labels
+    } = req.body;
+
+    if (!title || !projectId || !assigneeIds?.length) {
+      return res.status(400).json({
+        message: "Title, project, and assignees are required"
+      });
+    }
+
+    const project = await Project.findById(projectId);
+
+    if (!project) {
+      return res.status(404).json({
+        message: "Project not found"
+      });
+    }
+
+    const canCreate = await isProjectLeadForProject(projectId, req.user);
+
+    if (!canCreate) {
+      return res.status(403).json({
+        message: "You do not have permission to create task in this project"
+      });
+    }
+
+    const taskCode = await generateTaskCode();
+
+    const task = await Task.create({
+      taskCode,
+      title,
+      description: description || "",
+      project: projectId,
+      assignedTo: assigneeIds,
+      createdBy: req.user._id,
+      status: status || "backlog",
+      priority: priority || "medium",
+      dueDate: dueDate || null,
+      labels: labels || [],
+      activityLogs: [
+        {
+          user: req.user._id,
+          action: "Task Created by Assistant",
+          details: `${taskCode} was created from the AI assistant`
+        }
+      ]
+    });
+
+    const populatedTask = await Task.findById(task._id)
+      .populate({
+        path: "project",
+        select: "name parentProject projectLeads",
+        populate: { path: "projectLeads.user", select: "name email role" }
+      })
+      .populate("assignedTo", "name email role")
+      .populate("createdBy", "name email role");
+
+    const io = req.app.get("io");
+
+    io.emit("taskCreated", populatedTask);
+
+    for (const assigneeId of assigneeIds) {
+      const notification = await Notification.create({
+        user: assigneeId,
+        title: "New Task Assigned",
+        message: `${taskCode} - ${title}`,
+        type: "task_assigned",
+        task: task._id,
+        project: projectId
+      });
+
+      io.to(assigneeId.toString()).emit("notificationCreated", notification);
+    }
+
+    res.status(201).json(populatedTask);
+  } catch (error) {
+    res.status(500).json({
+      message: error.message
     });
   }
 });
