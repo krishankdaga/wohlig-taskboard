@@ -9,6 +9,8 @@ import Chatbot from "./pages/Chatbot";
 import Profile from "./pages/Profile";
 import MyWork from "./pages/MyWork";
 import Calendar from "./pages/Calendar";
+import AdminAnalytics from "./pages/AdminAnalytics";
+import AuditLog from "./pages/AuditLog";
 import AdminUserProfile from "./pages/AdminUserProfile";
 
 const ProtectedRoute = ({ children }) => {
@@ -110,6 +112,24 @@ const App = () => {
           element={
             <ProtectedRoute adminOnly>
               <AdminUserProfile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/analytics"
+          element={
+            <ProtectedRoute adminOnly>
+              <AdminAnalytics />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/audit"
+          element={
+            <ProtectedRoute adminOnly>
+              <AuditLog />
             </ProtectedRoute>
           }
         />

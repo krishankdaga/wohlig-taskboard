@@ -64,9 +64,19 @@ const Sidebar = () => {
           </Link>
 
           {user?.role === "admin" && (
-            <Link to="/admin" className={navClass("/admin")}>
-              Admin Panel
-            </Link>
+            <>
+              <Link to="/admin" className={navClass("/admin")}>
+                Admin Panel
+              </Link>
+
+              <Link to="/admin/analytics" className={navClass("/admin/analytics")}>
+                Analytics
+              </Link>
+
+              <Link to="/admin/audit" className={navClass("/admin/audit")}>
+                Audit Log
+              </Link>
+            </>
           )}
         </nav>
 
