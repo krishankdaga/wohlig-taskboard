@@ -125,3 +125,109 @@ body,
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Dark mode polish */
+.dark body {
+  background: #020617;
+  color: #e5e7eb;
+}
+
+.dark .glass-card {
+  background: rgba(15, 23, 42, 0.82);
+  border-color: rgba(51, 65, 85, 0.9);
+  color: #e5e7eb;
+}
+
+.dark .input-modern {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e5e7eb;
+}
+
+.dark .input-modern::placeholder {
+  color: #64748b;
+}
+
+.dark .btn-dark {
+  background: #e5e7eb;
+  color: #020617;
+}
+
+.dark .btn-primary {
+  color: white;
+}
+
+/* Professional motion + dark mode refinement */
+* {
+  scroll-behavior: smooth;
+}
+
+body {
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  transition: all 180ms ease;
+}
+
+.glass-card {
+  transition: transform 180ms ease, box-shadow 180ms ease, background-color 180ms ease, border-color 180ms ease;
+}
+
+.glass-card:hover {
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+}
+
+.dark body {
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.dark .glass-card {
+  background: rgba(15, 23, 42, 0.88);
+  border-color: rgba(51, 65, 85, 0.85);
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.18);
+}
+
+.dark .glass-card:hover {
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+}
+
+.dark .input-modern {
+  background: #111827;
+  border-color: #334155;
+  color: #e5e7eb;
+}
+
+.dark .input-modern::placeholder {
+  color: #64748b;
+}
+
+.dark .btn-dark {
+  background: #e5e7eb;
+  color: #020617;
+}
+
+.dark .btn-primary {
+  color: white;
+}
+
+/* Subtle page entrance */
+main {
+  animation: pageFadeIn 180ms ease-out;
+}
+
+@keyframes pageFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

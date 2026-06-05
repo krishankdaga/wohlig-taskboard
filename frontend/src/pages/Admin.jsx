@@ -380,10 +380,10 @@ const Admin = () => {
     }`;
 
   return (
-    <div className="flex">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">
       <Sidebar />
 
-      <main className="flex-1 min-h-screen">
+      <main className="flex-1 min-h-screen bg-slate-50 dark:bg-slate-950">
         <Navbar />
 
         <div className="p-3 sm:p-4 md:p-8 pb-28 lg:pb-8 max-w-7xl mx-auto overflow-hidden">

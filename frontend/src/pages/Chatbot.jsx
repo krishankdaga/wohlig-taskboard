@@ -84,7 +84,7 @@ const Chatbot = () => {
     <div className="flex min-h-screen overflow-hidden">
       <Sidebar />
 
-      <main className="flex-1 min-w-0 h-screen overflow-hidden flex flex-col">
+      <main className="flex-1 min-w-0 h-screen overflow-hidden flex flex-col bg-slate-50 dark:bg-slate-950">
         <Navbar />
 
         <div className="flex-1 min-h-0 p-3 sm:p-4 md:p-6 lg:p-8 pb-28 lg:pb-8 max-w-7xl w-full mx-auto overflow-hidden">

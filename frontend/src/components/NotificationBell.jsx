@@ -121,9 +121,9 @@ const NotificationBell = () => {
     <div className="relative">
       <button
         onClick={() => setOpen(!open)}
-        className="relative h-11 w-11 rounded-2xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-xs font-black text-slate-700"
+        className="relative h-11 w-11 rounded-2xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 flex items-center justify-center text-lg"
       >
-        NT
+        🔔
 
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-600 text-white text-[11px] font-black flex items-center justify-center">
