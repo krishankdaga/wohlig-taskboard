@@ -40,15 +40,16 @@ const Chatbot = () => {
 
   const askQuestion = async (customQuestion) => {
     const finalQuestion = customQuestion || question;
-
     if (!finalQuestion.trim()) return;
 
-    const userMessage = {
-      role: "user",
-      text: finalQuestion
-    };
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "user",
+        text: finalQuestion
+      }
+    ]);
 
-    setMessages((prev) => [...prev, userMessage]);
     setQuestion("");
 
     try {
@@ -81,32 +82,32 @@ const Chatbot = () => {
   };
 
   return (
-    <div className="flex min-h-screen overflow-hidden">
+    <div className="flex min-h-screen overflow-hidden bg-slate-50 dark:bg-black">
       <Sidebar />
 
-      <main className="flex-1 min-w-0 h-screen overflow-hidden flex flex-col bg-slate-50 dark:bg-slate-950">
+      <main className="flex-1 min-w-0 h-screen overflow-hidden flex flex-col bg-slate-50 dark:bg-black">
         <Navbar />
 
         <div className="flex-1 min-h-0 p-3 sm:p-4 md:p-6 lg:p-8 pb-28 lg:pb-8 max-w-7xl w-full mx-auto overflow-hidden">
           <section className="h-full glass-card rounded-3xl md:rounded-[32px] overflow-hidden flex flex-col">
-            <div className="shrink-0 p-5 md:p-7 border-b border-slate-200 bg-white/80">
+            <div className="shrink-0 p-5 md:p-7 border-b border-slate-200 dark:border-neutral-800 bg-white/80 dark:bg-neutral-950">
               <p className="text-sm font-black text-blue-600 uppercase tracking-wider">
                 Workspace Assistant
               </p>
 
-              <h1 className="text-2xl md:text-4xl font-black text-slate-900 mt-2">
-                TaskBoard Chatbot
+              <h1 className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white mt-2">
+                TaskBoard Assistant
               </h1>
 
-              <p className="text-slate-500 mt-2 max-w-2xl text-sm md:text-base">
+              <p className="text-slate-500 dark:text-neutral-400 mt-2 max-w-2xl text-sm md:text-base">
                 Ask questions about projects, employees, assigned tasks, due dates,
                 pending work, overdue tasks, and workspace progress.
               </p>
             </div>
 
             <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[320px_1fr]">
-              <aside className="shrink-0 bg-white/70 border-b lg:border-b-0 lg:border-r border-slate-200 p-4 md:p-5 max-h-[210px] lg:max-h-none overflow-auto hide-scrollbar">
-                <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-3">
+              <aside className="shrink-0 bg-white/70 dark:bg-neutral-950 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-neutral-800 p-4 md:p-5 max-h-[210px] lg:max-h-none overflow-auto hide-scrollbar">
+                <p className="text-xs font-black text-slate-400 dark:text-neutral-500 uppercase tracking-wider mb-3">
                   Try asking
                 </p>
 
@@ -115,7 +116,7 @@ const Chatbot = () => {
                     <button
                       key={item}
                       onClick={() => askQuestion(item)}
-                      className="min-w-[230px] lg:min-w-0 lg:w-full text-left bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 rounded-2xl p-3 text-sm font-semibold text-slate-700 transition"
+                      className="min-w-[230px] lg:min-w-0 lg:w-full text-left bg-slate-50 dark:bg-neutral-900 hover:bg-blue-50 dark:hover:bg-neutral-800 border border-slate-200 dark:border-neutral-800 hover:border-blue-200 dark:hover:border-neutral-700 rounded-2xl p-3 text-sm font-semibold text-slate-700 dark:text-neutral-200 transition"
                     >
                       {item}
                     </button>
@@ -123,7 +124,7 @@ const Chatbot = () => {
                 </div>
               </aside>
 
-              <div className="min-h-0 flex flex-col bg-slate-50/60">
+              <div className="min-h-0 flex flex-col bg-slate-50/60 dark:bg-black">
                 <div className="flex-1 min-h-0 p-4 md:p-5 overflow-y-auto space-y-4">
                   {messages.map((message, index) => {
                     const isUser = message.role === "user";
@@ -134,17 +135,15 @@ const Chatbot = () => {
                         className={`flex ${isUser ? "justify-end" : "justify-start"}`}
                       >
                         <div
-                          className={`max-w-[92%] md:max-w-[82%] rounded-3xl px-5 py-4 border whitespace-pre-line shadow-sm ${
+                          className={`max-w-[92%] md:max-w-[82%] rounded-3xl px-5 py-4 border shadow-sm ${
                             isUser
                               ? "bg-blue-600 text-white border-blue-600"
-                              : "bg-white text-slate-800 border-slate-200"
+                              : "bg-white dark:bg-neutral-950 text-slate-800 dark:text-neutral-100 border-slate-200 dark:border-neutral-800"
                           }`}
                         >
                           <div
                             className={`text-sm leading-relaxed prose prose-sm max-w-none prose-p:my-1 prose-ul:my-2 prose-li:my-1 ${
-                              isUser
-                                ? "prose-invert"
-                                : "prose-slate"
+                              isUser ? "prose-invert" : "prose-slate"
                             }`}
                           >
                             <ReactMarkdown>
@@ -158,8 +157,8 @@ const Chatbot = () => {
 
                   {loading && (
                     <div className="flex justify-start">
-                      <div className="bg-white border border-slate-200 rounded-3xl px-5 py-4 shadow-sm">
-                        <p className="text-sm font-bold text-slate-500">
+                      <div className="bg-white dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 rounded-3xl px-5 py-4 shadow-sm">
+                        <p className="text-sm font-bold text-slate-500 dark:text-neutral-400">
                           Thinking...
                         </p>
                       </div>
@@ -174,7 +173,7 @@ const Chatbot = () => {
                     e.preventDefault();
                     askQuestion();
                   }}
-                  className="shrink-0 bg-white border-t border-slate-200 p-3 md:p-4 flex gap-2 md:gap-3"
+                  className="shrink-0 bg-white dark:bg-neutral-950 border-t border-slate-200 dark:border-neutral-800 p-3 md:p-4 flex gap-2 md:gap-3"
                 >
                   <input
                     value={question}

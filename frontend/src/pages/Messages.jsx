@@ -336,34 +336,34 @@ const Messages = () => {
     <div className="flex min-h-screen overflow-hidden">
       <Sidebar />
 
-      <main className="flex-1 min-w-0 h-screen overflow-hidden flex flex-col bg-slate-50 dark:bg-slate-950">
+      <main className="flex-1 min-w-0 h-screen overflow-hidden flex flex-col bg-slate-50 dark:bg-neutral-950 dark:bg-slate-950">
         <Navbar />
 
         <div className="flex-1 min-h-0 p-3 sm:p-4 md:p-6 lg:p-8 pb-28 lg:pb-8 max-w-7xl w-full mx-auto overflow-hidden">
           <section className="h-full glass-card rounded-3xl md:rounded-[32px] overflow-hidden flex flex-col">
-            <div className="shrink-0 p-5 md:p-7 border-b border-slate-200 bg-white/80">
+            <div className="shrink-0 p-5 md:p-7 border-b border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-950">
               <p className="text-sm font-black text-blue-600 uppercase tracking-wider">
                 Communication
               </p>
 
-              <h1 className="text-2xl md:text-4xl font-black text-slate-900 mt-2">
+              <h1 className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white mt-2">
                 Messages
               </h1>
 
-              <p className="text-slate-500 mt-2 max-w-2xl text-sm md:text-base">
+              <p className="text-slate-500 dark:text-neutral-400 mt-2 max-w-2xl text-sm md:text-base">
                 Communicate with employees directly or discuss work inside project channels.
               </p>
             </div>
 
             <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[340px_1fr]">
-              <aside className="shrink-0 bg-white/70 border-b lg:border-b-0 lg:border-r border-slate-200 p-4 md:p-5 max-h-[280px] lg:max-h-none overflow-hidden flex flex-col">
+              <aside className="shrink-0 bg-white dark:bg-neutral-950 border-b lg:border-b-0 lg:border-r border-slate-200 dark:border-neutral-800 p-4 md:p-5 max-h-[280px] lg:max-h-none overflow-hidden flex flex-col">
                 <div className="grid grid-cols-2 gap-2 mb-5 shrink-0">
                   <button
                     onClick={() => switchChatType("direct")}
                     className={`rounded-2xl py-3 text-sm font-black transition ${
                       chatType === "direct"
                         ? "bg-slate-900 text-white"
-                        : "bg-slate-100 text-slate-600"
+                        : "bg-slate-100 dark:bg-neutral-900 text-slate-600 dark:text-neutral-300"
                     }`}
                   >
                     Direct
@@ -374,21 +374,21 @@ const Messages = () => {
                     className={`rounded-2xl py-3 text-sm font-black transition ${
                       chatType === "project"
                         ? "bg-slate-900 text-white"
-                        : "bg-slate-100 text-slate-600"
+                        : "bg-slate-100 dark:bg-neutral-900 text-slate-600 dark:text-neutral-300"
                     }`}
                   >
                     Projects
                   </button>
                 </div>
 
-                <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-3 shrink-0">
+                <p className="text-xs font-black text-slate-400 dark:text-neutral-500 uppercase tracking-wider mb-3 shrink-0">
                   {chatType === "direct" ? "Employees" : "Project Channels"}
                 </p>
 
                 <div className="space-y-2 overflow-auto hide-scrollbar flex-1 pr-1">
                   {listItems.length === 0 && (
                     <div className="rounded-2xl border border-dashed border-slate-300 p-5 text-center">
-                      <p className="text-sm font-bold text-slate-400">
+                      <p className="text-sm font-bold text-slate-400 dark:text-neutral-500">
                         {chatType === "direct"
                           ? "No employees found"
                           : "No project channels found"}
@@ -411,7 +411,7 @@ const Messages = () => {
                             ? "bg-blue-50 border-blue-200 text-blue-700"
                             : unreadCount > 0
                             ? "bg-amber-50 border-amber-200 text-slate-800"
-                            : "bg-white border-slate-100 text-slate-700 hover:border-blue-100"
+                            : "bg-white border-slate-100 dark:border-neutral-800 text-slate-700 dark:text-neutral-300 hover:border-blue-100"
                         }`}
                       >
                         <div className="flex items-center gap-3">
@@ -440,13 +440,13 @@ const Messages = () => {
                 </div>
               </aside>
 
-              <div className="min-h-0 flex flex-col bg-slate-50/60">
-                <div className="shrink-0 bg-white border-b border-slate-200 p-4 md:p-5">
+              <div className="min-h-0 flex flex-col bg-slate-50 dark:bg-neutral-950 dark:bg-black">
+                <div className="shrink-0 bg-white dark:bg-neutral-950 border-b border-slate-200 dark:border-neutral-800 dark:border-neutral-800 p-4 md:p-5">
                   <p className="text-xs font-black text-blue-600 uppercase tracking-wider">
                     {chatType === "direct" ? "Direct Message" : "Project Channel"}
                   </p>
 
-                  <h2 className="text-xl md:text-2xl font-black text-slate-900 mt-1">
+                  <h2 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white mt-1">
                     {selectedItem?.name || "Select a conversation"}
                   </h2>
                 </div>
@@ -454,13 +454,13 @@ const Messages = () => {
                 {!selectedId ? (
                   <div className="flex-1 min-h-0 flex items-center justify-center p-8">
                     <div className="max-w-md text-center">
-                      <p className="text-sm font-black text-slate-400 uppercase tracking-wider">
+                      <p className="text-sm font-black text-slate-400 dark:text-neutral-500 uppercase tracking-wider">
                         No conversation selected
                       </p>
-                      <h3 className="text-2xl font-black text-slate-900 mt-2">
+                      <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-2">
                         Choose a chat to begin
                       </h3>
-                      <p className="text-slate-500 mt-2">
+                      <p className="text-slate-500 dark:text-neutral-400 mt-2">
                         Select an employee or project channel from the left panel.
                       </p>
                     </div>
@@ -480,12 +480,12 @@ const Messages = () => {
                               className={`max-w-[92%] md:max-w-[72%] rounded-3xl px-5 py-4 border shadow-sm ${
                                 isMine
                                   ? "bg-blue-600 text-white border-blue-600"
-                                  : "bg-white text-slate-800 border-slate-200"
+                                  : "bg-white dark:bg-neutral-950 text-slate-800 dark:text-neutral-100 border-slate-200 dark:border-neutral-800 dark:border-neutral-800"
                               }`}
                             >
                               <p
                                 className={`text-xs font-black mb-2 ${
-                                  isMine ? "text-blue-100" : "text-slate-400"
+                                  isMine ? "text-blue-100" : "text-slate-400 dark:text-neutral-500"
                                 }`}
                               >
                                 {message.sender?.name}
@@ -497,7 +497,7 @@ const Messages = () => {
 
                               <div
                                 className={`flex items-center gap-2 text-[11px] mt-2 ${
-                                  isMine ? "text-blue-100" : "text-slate-400"
+                                  isMine ? "text-blue-100" : "text-slate-400 dark:text-neutral-500"
                                 }`}
                               >
                                 <span>
@@ -527,7 +527,7 @@ const Messages = () => {
 
                       {Object.keys(typingUsers).length > 0 && (
                         <div className="flex justify-start">
-                          <div className="bg-white border border-slate-200 rounded-3xl px-5 py-3">
+                          <div className="bg-white border border-slate-200 dark:border-neutral-800 rounded-3xl px-5 py-3">
                             <p className="text-xs font-bold text-blue-600">
                               {Object.values(typingUsers).join(", ")}{" "}
                               {Object.keys(typingUsers).length === 1 ? "is" : "are"} typing...
@@ -541,7 +541,7 @@ const Messages = () => {
 
                     <form
                       onSubmit={sendMessage}
-                      className="shrink-0 bg-white border-t border-slate-200 p-3 md:p-4 flex gap-2 md:gap-3"
+                      className="shrink-0 bg-white dark:bg-neutral-950 border-t border-slate-200 dark:border-neutral-800 dark:border-neutral-800 p-3 md:p-4 flex gap-2 md:gap-3"
                     >
                       <input
                         value={text}

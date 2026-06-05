@@ -157,4 +157,118 @@ router.delete("/users/:id", protect, adminOnly, async (req, res) => {
   }
 });
 
+
+router.get("/users/:id/profile", protect, adminOnly, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const Project = require("../models/Project");
+    const Task = require("../models/Task");
+
+    const projects = await Project.find({
+      members: user._id
+    })
+      .populate("parentProject", "name")
+      .populate("projectLeads.user", "name email role")
+      .sort({ createdAt: -1 });
+
+    const leadProjects = await Project.find({
+      "projectLeads.user": user._id
+    })
+      .populate("parentProject", "name")
+      .populate("projectLeads.user", "name email role")
+      .sort({ createdAt: -1 });
+
+    const tasks = await Task.find({
+      assignedTo: user._id,
+      isArchived: { $ne: true }
+    })
+      .populate("project", "name")
+      .populate("assignedTo", "name email role")
+      .sort({ dueDate: 1, createdAt: -1 });
+
+    const taskStats = {
+      total: tasks.length,
+      pending: tasks.filter((task) => task.status !== "closed").length,
+      closed: tasks.filter((task) => task.status === "closed").length,
+      highPriority: tasks.filter(
+        (task) => task.priority === "high" && task.status !== "closed"
+      ).length
+    };
+
+    res.json({
+      user,
+      projects,
+      leadProjects,
+      tasks,
+      taskStats
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+
+
+
+
+
+router.put("/change-password", protect, async (req, res) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({
+        message: "Please fill all password fields"
+      });
+    }
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({
+        message: "New password and confirm password do not match"
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({
+        message: "New password must be at least 6 characters long"
+      });
+    }
+
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found"
+      });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        message: "Current password is incorrect"
+      });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+
+    await user.save();
+
+    res.json({
+      message: "Password changed successfully"
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message
+    });
+  }
+});
+
+
 module.exports = router;

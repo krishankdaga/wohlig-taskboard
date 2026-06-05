@@ -22,10 +22,28 @@ const projectSchema = new mongoose.Schema(
         ref: "User"
       }
     ],
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User"
-    }
+    projectLeads: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true
+        },
+        title: {
+          type: String,
+          default: "Project Lead",
+          trim: true
+        },
+        assignedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User"
+        },
+        assignedAt: {
+          type: Date,
+          default: Date.now
+        }
+      }
+    ]
   },
   { timestamps: true }
 );

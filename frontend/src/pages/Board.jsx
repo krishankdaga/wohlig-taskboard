@@ -11,8 +11,8 @@ import socket from "../api/socket";
 const statuses = [
   { id: "backlog", title: "Backlog", icon: "🧊" },
   { id: "todo", title: "To Do", icon: "" },
-  { id: "in_progress", title: "In Progress", icon: "IP" },
-  { id: "review", title: "Review", icon: "RV" },
+  { id: "in_progress", title: "In Progress", icon: "" },
+  { id: "review", title: "Review", icon: "" },
   { id: "closed", title: "Closed", icon: "" }
 ];
 
@@ -503,8 +503,25 @@ const Board = () => {
     });
   };
 
+  const isLeadForSelectedTaskProject = () => {
+    if (!selectedTask || !user) return false;
+
+    const project = selectedTask.project;
+
+    const leads = project?.projectLeads || [];
+
+    return leads.some((lead) => {
+      const leadUserId = lead.user?._id || lead.user;
+      return leadUserId === user._id;
+    });
+  };
+
+  const canManageSelectedTask = () => {
+    return user?.role === "admin" || isLeadForSelectedTaskProject();
+  };
+
   const canCollaborateOnSelectedTask = () => {
-    return user?.role === "admin" || isAssignedToSelectedTask();
+    return user?.role === "admin" || isAssignedToSelectedTask() || isLeadForSelectedTaskProject();
   };
 
   const getChecklistProgress = (task) => {
@@ -724,10 +741,10 @@ const Board = () => {
   ].filter(Boolean).length;
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-neutral-950 dark:bg-slate-950">
       <Sidebar />
 
-      <main className="flex-1 min-h-screen bg-slate-50 dark:bg-slate-950">
+      <main className="flex-1 min-h-screen bg-slate-50 dark:bg-neutral-950 dark:bg-slate-950">
         <Navbar />
 
         <div className="p-3 sm:p-4 md:p-8 pb-28 lg:pb-8 overflow-hidden">
@@ -738,15 +755,15 @@ const Board = () => {
                   Kanban Workspace
                 </p>
 
-                <h1 className="text-2xl md:text-4xl font-black text-slate-900 mt-1 tracking-tight">
+                <h1 className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white mt-1 tracking-tight">
                   Task Board
                 </h1>
 
-                <div className="mt-3 inline-flex items-center gap-2 rounded-2xl bg-slate-100 border border-slate-200 px-4 py-2">
-                  <span className="text-xs font-bold text-slate-400 uppercase">
+                <div className="mt-3 inline-flex items-center gap-2 rounded-2xl bg-slate-100 dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 px-4 py-2">
+                  <span className="text-xs font-bold text-slate-400 dark:text-neutral-500 uppercase">
                     Current View
                   </span>
-                  <span className="text-sm font-black text-slate-800">
+                  <span className="text-sm font-black text-slate-800 dark:text-neutral-100">
                     {selectedProjectName}
                   </span>
                 </div>
@@ -755,19 +772,19 @@ const Board = () => {
               <div className="flex flex-wrap items-center gap-2 md:gap-3">
                 <button
                   onClick={fetchBoardData}
-                  className="px-4 md:px-5 py-2.5 md:py-3 rounded-2xl bg-white border border-slate-200 text-xs md:text-sm font-black text-slate-600 hover:bg-slate-50"
+                  className="px-4 md:px-5 py-2.5 md:py-3 rounded-2xl bg-white dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 text-xs md:text-sm font-black text-slate-600 dark:text-neutral-400 hover:bg-slate-50 dark:bg-neutral-950"
                 >
                   Refresh
                 </button>
 
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className="px-4 md:px-5 py-2.5 md:py-3 rounded-2xl bg-white border border-slate-200 text-xs md:text-sm font-black text-slate-600 hover:bg-slate-50"
+                  className="px-4 md:px-5 py-2.5 md:py-3 rounded-2xl bg-white dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 text-xs md:text-sm font-black text-slate-600 dark:text-neutral-400 hover:bg-slate-50 dark:bg-neutral-950"
                 >
                   Filters {activeFilterCount > 0 ? `(${activeFilterCount})` : ""}
                 </button>
 
-                {user?.role === "admin" && (
+                {canManageSelectedTask() && (
                   <button
                     onClick={() => setShowTaskModal(true)}
                     className="btn-primary"
@@ -824,11 +841,11 @@ const Board = () => {
             </div>
 
             {showFilters && (
-              <div className="mt-5 rounded-3xl bg-slate-50 border border-slate-200 p-4 md:p-5">
+              <div className="mt-5 rounded-3xl bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 p-4 md:p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <p className="font-black text-slate-800">Advanced Filters</p>
-                    <p className="text-sm text-slate-500">
+                    <p className="font-black text-slate-800 dark:text-neutral-100">Advanced Filters</p>
+                    <p className="text-sm text-slate-500 dark:text-neutral-400">
                       Narrow down the board without cluttering the screen.
                     </p>
                   </div>
@@ -918,26 +935,26 @@ const Board = () => {
                         className={`rounded-[28px] p-4 min-h-[560px] md:min-h-[620px] w-[82vw] sm:w-[360px] xl:w-auto flex-shrink-0 snap-start border transition ${
                           snapshot.isDraggingOver
                             ? "bg-blue-50 border-blue-300"
-                            : "bg-white/70 border-slate-200"
+                            : "bg-white dark:bg-neutral-950 dark:bg-neutral-950 border-slate-200 dark:border-neutral-800"
                         }`}
                       >
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center gap-2">
-                            <span className="h-9 w-9 rounded-2xl bg-slate-100 flex items-center justify-center">
+                            <span className="h-9 w-9 rounded-2xl bg-slate-100 dark:bg-neutral-900 flex items-center justify-center">
                               {status.icon}
                             </span>
-                            <h2 className="text-sm font-black text-slate-800 uppercase">
+                            <h2 className="text-sm font-black text-slate-800 dark:text-neutral-100 uppercase">
                               {status.title}
                             </h2>
                           </div>
 
-                          <span className="text-xs bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full font-bold">
+                          <span className="text-xs bg-slate-100 dark:bg-neutral-900 text-slate-600 dark:text-neutral-400 px-2.5 py-1 rounded-full font-bold">
                             {columnTasks.length}
                           </span>
                         </div>
 
                         {columnTasks.length === 0 && (
-                          <div className="border border-dashed border-slate-300 rounded-2xl p-5 text-center text-sm text-slate-400">
+                          <div className="border border-dashed border-slate-300 rounded-2xl p-5 text-center text-sm text-slate-400 dark:text-neutral-500">
                             No tasks here
                           </div>
                         )}
@@ -971,20 +988,20 @@ const Board = () => {
 
       {showTaskModal && (
         <div className="fixed inset-0 bg-slate-950/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl p-6">
+          <div className="bg-white dark:bg-neutral-950 w-full max-w-2xl rounded-3xl shadow-2xl p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <p className="text-sm font-bold text-blue-600 uppercase tracking-wider">
                   Quick Create
                 </p>
-                <h2 className="text-2xl font-black text-slate-900">
+                <h2 className="text-2xl font-black text-slate-900 dark:text-white">
                   New Task
                 </h2>
               </div>
 
               <button
                 onClick={() => setShowTaskModal(false)}
-                className="h-10 w-10 rounded-2xl bg-slate-100 hover:bg-slate-200"
+                className="h-10 w-10 rounded-2xl bg-slate-100 dark:bg-neutral-900 hover:bg-slate-200"
               >
                 ×
               </button>
@@ -1101,7 +1118,7 @@ const Board = () => {
               </div>
 
               <div>
-                <p className="font-black text-sm text-slate-700 mb-2">
+                <p className="font-black text-sm text-slate-700 dark:text-neutral-300 mb-2">
                   Labels
                 </p>
 
@@ -1139,7 +1156,7 @@ const Board = () => {
                 <button
                   type="button"
                   onClick={() => setShowTaskModal(false)}
-                  className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-semibold"
+                  className="px-4 py-2 rounded-xl border border-slate-200 dark:border-neutral-800 text-slate-600 dark:text-neutral-400 font-semibold"
                 >
                   Cancel
                 </button>
@@ -1155,8 +1172,8 @@ const Board = () => {
 
       {selectedTask && (
         <div className="fixed inset-0 bg-slate-950/50 backdrop-blur-sm z-50 flex items-center justify-center p-0 md:p-4">
-          <div className="bg-white w-full h-full md:h-auto md:max-h-[92vh] max-w-6xl md:rounded-[32px] shadow-2xl overflow-hidden flex flex-col">
-            <div className="p-4 md:p-6 border-b border-slate-200 flex items-start justify-between gap-4">
+          <div className="bg-white dark:bg-neutral-950 w-full h-full md:h-auto md:max-h-[92vh] max-w-6xl md:rounded-[32px] shadow-2xl overflow-hidden flex flex-col">
+            <div className="p-4 md:p-6 border-b border-slate-200 dark:border-neutral-800 flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <p className="text-sm font-bold text-blue-600 uppercase tracking-wider">
                   Task Details
@@ -1168,11 +1185,11 @@ const Board = () => {
                   </p>
                 )}
 
-                <h2 className="text-xl md:text-3xl font-black text-slate-900 mt-3 line-clamp-2">
+                <h2 className="text-xl md:text-3xl font-black text-slate-900 dark:text-white mt-3 line-clamp-2">
                   {selectedTask.title}
                 </h2>
 
-                <p className="text-sm text-slate-500 mt-2">
+                <p className="text-sm text-slate-500 dark:text-neutral-400 mt-2">
                   {selectedTask.project?.name} ·{" "}
                   {Array.isArray(selectedTask.assignedTo)
                     ? selectedTask.assignedTo.map((employee) => employee.name).join(", ")
@@ -1186,14 +1203,14 @@ const Board = () => {
                   setIsEditing(false);
                   setActiveTaskTab("overview");
                 }}
-                className="h-11 w-11 rounded-2xl bg-slate-100 hover:bg-slate-200 font-black"
+                className="h-11 w-11 rounded-2xl bg-slate-100 dark:bg-neutral-900 hover:bg-slate-200 font-black"
               >
                 ×
               </button>
             </div>
 
             {!isEditing && (
-              <div className="px-6 pt-4 border-b border-slate-200 bg-white">
+              <div className="px-6 pt-4 border-b border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-950">
                 <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-4">
                   {[
                     { id: "overview", label: "Overview", icon: "" },
@@ -1208,7 +1225,7 @@ const Board = () => {
                       className={`px-4 py-2 rounded-2xl text-sm font-black whitespace-nowrap transition ${
                         activeTaskTab === tab.id
                           ? "bg-slate-900 text-white"
-                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                          : "bg-slate-100 dark:bg-neutral-900 text-slate-600 dark:text-neutral-400 hover:bg-slate-200"
                       }`}
                     >
                       {tab.icon} {tab.label}
@@ -1224,61 +1241,61 @@ const Board = () => {
                   {activeTaskTab === "overview" && (
                     <div className="space-y-5">
                       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-                        <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
-                          <p className="text-xs text-slate-400 font-bold uppercase">
+                        <div className="rounded-2xl bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 p-4">
+                          <p className="text-xs text-slate-400 dark:text-neutral-500 font-bold uppercase">
                             Project
                           </p>
-                          <p className="font-bold text-slate-900 mt-1">
+                          <p className="font-bold text-slate-900 dark:text-white mt-1">
                             {selectedTask.project?.name}
                           </p>
                         </div>
 
-                        <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
-                          <p className="text-xs text-slate-400 font-bold uppercase">
+                        <div className="rounded-2xl bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 p-4">
+                          <p className="text-xs text-slate-400 dark:text-neutral-500 font-bold uppercase">
                             Assigned To
                           </p>
-                          <p className="font-bold text-slate-900 mt-1">
+                          <p className="font-bold text-slate-900 dark:text-white mt-1">
                             {Array.isArray(selectedTask.assignedTo)
                               ? selectedTask.assignedTo.map((employee) => employee.name).join(", ")
                               : selectedTask.assignedTo?.name}
                           </p>
                         </div>
 
-                        <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
-                          <p className="text-xs text-slate-400 font-bold uppercase">
+                        <div className="rounded-2xl bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 p-4">
+                          <p className="text-xs text-slate-400 dark:text-neutral-500 font-bold uppercase">
                             Status
                           </p>
-                          <p className="font-bold text-slate-900 mt-1 capitalize">
+                          <p className="font-bold text-slate-900 dark:text-white mt-1 capitalize">
                             {selectedTask.status?.replace("_", " ")}
                           </p>
                         </div>
 
-                        <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
-                          <p className="text-xs text-slate-400 font-bold uppercase">
+                        <div className="rounded-2xl bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 p-4">
+                          <p className="text-xs text-slate-400 dark:text-neutral-500 font-bold uppercase">
                             Due Date
                           </p>
-                          <p className="font-bold text-slate-900 mt-1">
+                          <p className="font-bold text-slate-900 dark:text-white mt-1">
                             {formatFullDate(selectedTask.dueDate)}
                           </p>
                         </div>
                       </div>
 
-                      <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4">
-                        <p className="text-xs text-slate-400 font-bold uppercase">
+                      <div className="rounded-2xl bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 p-4">
+                        <p className="text-xs text-slate-400 dark:text-neutral-500 font-bold uppercase">
                           Description
                         </p>
-                        <p className="text-slate-700 mt-2 leading-relaxed">
+                        <p className="text-slate-700 dark:text-neutral-300 mt-2 leading-relaxed">
                           {selectedTask.description || "No description provided."}
                         </p>
                       </div>
 
-                      <div className="rounded-2xl bg-white border border-slate-200 p-4">
-                        <p className="text-xs text-slate-400 font-bold uppercase">
+                      <div className="rounded-2xl bg-white dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 p-4">
+                        <p className="text-xs text-slate-400 dark:text-neutral-500 font-bold uppercase">
                           Labels
                         </p>
 
                         {(!selectedTask.labels || selectedTask.labels.length === 0) ? (
-                          <p className="text-sm text-slate-400 mt-2">
+                          <p className="text-sm text-slate-400 dark:text-neutral-500 mt-2">
                             No labels added.
                           </p>
                         ) : (
@@ -1335,12 +1352,12 @@ const Board = () => {
 
                         <button
                           onClick={() => setActiveTaskTab("activity")}
-                          className="rounded-2xl bg-slate-50 border border-slate-200 p-4 text-left"
+                          className="rounded-2xl bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 p-4 text-left"
                         >
-                          <p className="text-xs font-black text-slate-500 uppercase">
+                          <p className="text-xs font-black text-slate-500 dark:text-neutral-400 uppercase">
                             Activity
                           </p>
-                          <p className="text-2xl font-black text-slate-900 mt-1">
+                          <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
                             {selectedTask.activityLogs?.length || 0}
                           </p>
                         </button>
@@ -1349,18 +1366,18 @@ const Board = () => {
                   )}
 
                   {activeTaskTab === "checklist" && (
-                    <div className="rounded-2xl bg-white border border-slate-200 p-5">
+                    <div className="rounded-2xl bg-white dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 p-5">
                       <div className="flex items-center justify-between mb-4">
                         <div>
-                          <p className="text-xs text-slate-400 font-bold uppercase">
+                          <p className="text-xs text-slate-400 dark:text-neutral-500 font-bold uppercase">
                             Checklist
                           </p>
-                          <p className="text-sm text-slate-500">
+                          <p className="text-sm text-slate-500 dark:text-neutral-400">
                             Break the task into smaller steps.
                           </p>
                         </div>
 
-                        <span className="text-xs font-bold bg-slate-100 text-slate-600 px-3 py-1 rounded-full">
+                        <span className="text-xs font-bold bg-slate-100 dark:bg-neutral-900 text-slate-600 dark:text-neutral-400 px-3 py-1 rounded-full">
                           {getChecklistProgress(selectedTask).done}/
                           {getChecklistProgress(selectedTask).total}
                         </span>
@@ -1369,12 +1386,12 @@ const Board = () => {
                       {(selectedTask.checklist || []).length > 0 && (
                         <div className="mb-4">
                           <div className="flex items-center justify-between mb-2">
-                            <p className="text-xs font-black text-slate-500">
+                            <p className="text-xs font-black text-slate-500 dark:text-neutral-400">
                               {getChecklistProgress(selectedTask).percentage}% complete
                             </p>
                           </div>
 
-                          <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="h-2 bg-slate-100 dark:bg-neutral-900 rounded-full overflow-hidden">
                             <div
                               className="h-full bg-blue-600 rounded-full transition-all"
                               style={{
@@ -1386,7 +1403,7 @@ const Board = () => {
                       )}
 
                       {(!selectedTask.checklist || selectedTask.checklist.length === 0) ? (
-                        <div className="border border-dashed border-slate-300 rounded-2xl p-5 text-center text-sm text-slate-400 mb-4">
+                        <div className="border border-dashed border-slate-300 rounded-2xl p-5 text-center text-sm text-slate-400 dark:text-neutral-500 mb-4">
                           No checklist items yet.
                         </div>
                       ) : (
@@ -1394,7 +1411,7 @@ const Board = () => {
                           {selectedTask.checklist.map((item) => (
                             <div
                               key={item._id}
-                              className="flex items-center justify-between gap-3 bg-slate-50 border border-slate-200 rounded-2xl p-3"
+                              className="flex items-center justify-between gap-3 bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 rounded-2xl p-3"
                             >
                               <label className="flex items-center gap-3 flex-1 cursor-pointer">
                                 <input
@@ -1410,8 +1427,8 @@ const Board = () => {
                                 <span
                                   className={`text-sm font-semibold ${
                                     item.isDone
-                                      ? "text-slate-400 line-through"
-                                      : "text-slate-800"
+                                      ? "text-slate-400 dark:text-neutral-500 line-through"
+                                      : "text-slate-800 dark:text-neutral-100"
                                   }`}
                                 >
                                   {item.text}
@@ -1446,7 +1463,7 @@ const Board = () => {
                           </button>
                         </form>
                       ) : (
-                        <p className="text-sm text-slate-400 bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                        <p className="text-sm text-slate-400 dark:text-neutral-500 bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 rounded-2xl p-4">
                           You can view this checklist, but only assigned employees can update it.
                         </p>
                       )}
@@ -1454,18 +1471,18 @@ const Board = () => {
                   )}
 
                   {activeTaskTab === "attachments" && (
-                    <div className="rounded-2xl bg-white border border-slate-200 p-5">
+                    <div className="rounded-2xl bg-white dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 p-5">
                       <div className="flex items-center justify-between mb-4">
                         <div>
-                          <p className="text-xs text-slate-400 font-bold uppercase">
+                          <p className="text-xs text-slate-400 dark:text-neutral-500 font-bold uppercase">
                             Attachments
                           </p>
-                          <p className="text-sm text-slate-500">
+                          <p className="text-sm text-slate-500 dark:text-neutral-400">
                             Upload screenshots, PDFs, docs, or reference files.
                           </p>
                         </div>
 
-                        <span className="text-xs font-bold bg-slate-100 text-slate-600 px-3 py-1 rounded-full">
+                        <span className="text-xs font-bold bg-slate-100 dark:bg-neutral-900 text-slate-600 dark:text-neutral-400 px-3 py-1 rounded-full">
                           {selectedTask.attachments?.length || 0}
                         </span>
                       </div>
@@ -1486,13 +1503,13 @@ const Board = () => {
                           </button>
                         </form>
                       ) : (
-                        <p className="text-sm text-slate-400 bg-slate-50 border border-slate-200 rounded-2xl p-4 mb-4">
+                        <p className="text-sm text-slate-400 dark:text-neutral-500 bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 rounded-2xl p-4 mb-4">
                           You can view attachments, but only assigned employees can upload files.
                         </p>
                       )}
 
                       {(!selectedTask.attachments || selectedTask.attachments.length === 0) ? (
-                        <div className="border border-dashed border-slate-300 rounded-2xl p-5 text-center text-sm text-slate-400">
+                        <div className="border border-dashed border-slate-300 rounded-2xl p-5 text-center text-sm text-slate-400 dark:text-neutral-500">
                           No attachments yet.
                         </div>
                       ) : (
@@ -1504,14 +1521,14 @@ const Board = () => {
                             return (
                               <div
                                 key={attachment._id}
-                                className="bg-slate-50 border border-slate-200 rounded-3xl overflow-hidden hover:shadow-sm transition"
+                                className="bg-slate-50 dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 rounded-3xl overflow-hidden hover:shadow-sm transition"
                               >
                                 {isImage ? (
                                   <a
                                     href={fileUrl}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="block bg-white"
+                                    className="block bg-white dark:bg-neutral-950"
                                   >
                                     <img
                                       src={fileUrl}
@@ -1524,12 +1541,12 @@ const Board = () => {
                                     href={fileUrl}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="h-44 bg-white flex flex-col items-center justify-center border-b border-slate-200"
+                                    className="h-44 bg-white dark:bg-neutral-950 flex flex-col items-center justify-center border-b border-slate-200 dark:border-neutral-800"
                                   >
                                     <span className="text-5xl">
                                       {getFileIcon(attachment)}
                                     </span>
-                                    <span className="text-xs font-bold text-slate-400 mt-3">
+                                    <span className="text-xs font-bold text-slate-400 dark:text-neutral-500 mt-3">
                                       Click to open file
                                     </span>
                                   </a>
@@ -1538,16 +1555,16 @@ const Board = () => {
                                 <div className="p-4">
                                   <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0">
-                                      <p className="font-black text-slate-800 text-sm truncate">
+                                      <p className="font-black text-slate-800 dark:text-neutral-100 text-sm truncate">
                                         {attachment.originalName}
                                       </p>
 
-                                      <p className="text-xs text-slate-400 mt-1">
+                                      <p className="text-xs text-slate-400 dark:text-neutral-500 mt-1">
                                         {formatFileSize(attachment.fileSize)} · Uploaded by{" "}
                                         {attachment.uploadedBy?.name || "User"}
                                       </p>
 
-                                      <p className="text-xs text-slate-400 mt-1">
+                                      <p className="text-xs text-slate-400 dark:text-neutral-500 mt-1">
                                         {new Date(attachment.uploadedAt).toLocaleString("en-IN", {
                                           day: "2-digit",
                                           month: "short",
@@ -1592,38 +1609,38 @@ const Board = () => {
                   )}
 
                   {activeTaskTab === "comments" && (
-                    <div className="rounded-2xl bg-white border border-slate-200 p-5">
+                    <div className="rounded-2xl bg-white dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 p-5">
                       <div className="flex items-center justify-between mb-4">
                         <div>
-                          <p className="text-xs text-slate-400 font-bold uppercase">
+                          <p className="text-xs text-slate-400 dark:text-neutral-500 font-bold uppercase">
                             Comments
                           </p>
-                          <p className="text-sm text-slate-500">
+                          <p className="text-sm text-slate-500 dark:text-neutral-400">
                             Discuss updates related to this task.
                           </p>
                         </div>
 
-                        <span className="text-xs font-bold bg-slate-100 text-slate-600 px-3 py-1 rounded-full">
+                        <span className="text-xs font-bold bg-slate-100 dark:bg-neutral-900 text-slate-600 dark:text-neutral-400 px-3 py-1 rounded-full">
                           {selectedTask.comments?.length || 0}
                         </span>
                       </div>
 
                       <div className="space-y-3 max-h-[50vh] overflow-auto mb-4">
                         {(!selectedTask.comments || selectedTask.comments.length === 0) ? (
-                          <div className="border border-dashed border-slate-300 rounded-2xl p-5 text-center text-sm text-slate-400">
+                          <div className="border border-dashed border-slate-300 rounded-2xl p-5 text-center text-sm text-slate-400 dark:text-neutral-500">
                             No comments yet.
                           </div>
                         ) : (
                           selectedTask.comments.map((comment) => (
                             <div
                               key={comment._id}
-                              className="bg-slate-50 border border-slate-100 rounded-2xl p-3"
+                              className="bg-slate-50 dark:bg-neutral-950 border border-slate-100 dark:border-neutral-800 rounded-2xl p-3"
                             >
                               <div className="flex items-center justify-between gap-3">
-                                <p className="text-sm font-black text-slate-800">
+                                <p className="text-sm font-black text-slate-800 dark:text-neutral-100">
                                   {comment.user?.name || "User"}
                                 </p>
-                                <p className="text-xs text-slate-400">
+                                <p className="text-xs text-slate-400 dark:text-neutral-500">
                                   {new Date(comment.createdAt).toLocaleString("en-IN", {
                                     day: "2-digit",
                                     month: "short",
@@ -1632,7 +1649,7 @@ const Board = () => {
                                   })}
                                 </p>
                               </div>
-                              <p className="text-sm text-slate-700 mt-2">
+                              <p className="text-sm text-slate-700 dark:text-neutral-300 mt-2">
                                 {comment.text}
                               </p>
                             </div>
@@ -1656,25 +1673,25 @@ const Board = () => {
                   )}
 
                   {activeTaskTab === "activity" && (
-                    <div className="rounded-2xl bg-white border border-slate-200 p-5">
+                    <div className="rounded-2xl bg-white dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 p-5">
                       <div className="flex items-center justify-between mb-4">
                         <div>
-                          <p className="text-xs text-slate-400 font-bold uppercase">
+                          <p className="text-xs text-slate-400 dark:text-neutral-500 font-bold uppercase">
                             Activity
                           </p>
-                          <p className="text-sm text-slate-500">
+                          <p className="text-sm text-slate-500 dark:text-neutral-400">
                             Track every important change.
                           </p>
                         </div>
 
-                        <span className="text-xs font-bold bg-slate-100 text-slate-600 px-3 py-1 rounded-full">
+                        <span className="text-xs font-bold bg-slate-100 dark:bg-neutral-900 text-slate-600 dark:text-neutral-400 px-3 py-1 rounded-full">
                           {selectedTask.activityLogs?.length || 0}
                         </span>
                       </div>
 
                       <div className="space-y-3 max-h-[60vh] overflow-auto">
                         {(!selectedTask.activityLogs || selectedTask.activityLogs.length === 0) ? (
-                          <div className="border border-dashed border-slate-300 rounded-2xl p-5 text-center text-sm text-slate-400">
+                          <div className="border border-dashed border-slate-300 rounded-2xl p-5 text-center text-sm text-slate-400 dark:text-neutral-500">
                             No activity yet.
                           </div>
                         ) : (
@@ -1684,17 +1701,17 @@ const Board = () => {
                               className="relative pl-5 border-l-2 border-blue-100"
                             >
                               <div className="absolute -left-[7px] top-1 h-3 w-3 rounded-full bg-blue-600" />
-                              <p className="text-sm font-black text-slate-800">
+                              <p className="text-sm font-black text-slate-800 dark:text-neutral-100">
                                 {log.action}
                               </p>
-                              <p className="text-sm text-slate-600 mt-1">
+                              <p className="text-sm text-slate-600 dark:text-neutral-400 mt-1">
                                 {log.details}
                               </p>
                               <div className="flex items-center justify-between mt-2">
-                                <p className="text-xs text-slate-400">
+                                <p className="text-xs text-slate-400 dark:text-neutral-500">
                                   {log.user?.name || "System"}
                                 </p>
-                                <p className="text-xs text-slate-400">
+                                <p className="text-xs text-slate-400 dark:text-neutral-500">
                                   {new Date(log.createdAt).toLocaleString("en-IN", {
                                     day: "2-digit",
                                     month: "short",
@@ -1713,12 +1730,14 @@ const Board = () => {
                   <div className="flex items-center justify-end gap-3 mt-6">
                     {user?.role === "admin" && (
                       <>
-                        <button
-                          onClick={archiveTask}
-                          className="px-4 py-2 rounded-xl bg-amber-50 text-amber-700 border border-amber-100 font-semibold"
-                        >
-                          Archive
-                        </button>
+                        {user?.role === "admin" && (
+                          <button
+                            onClick={archiveTask}
+                            className="px-4 py-2 rounded-xl bg-amber-50 text-amber-700 border border-amber-100 font-semibold"
+                          >
+                            Archive
+                          </button>
+                        )}
 
                         <button
                           onClick={() => setIsEditing(true)}
@@ -1854,7 +1873,7 @@ const Board = () => {
                   </div>
 
                   <div>
-                    <p className="font-black text-sm text-slate-700 mb-2">
+                    <p className="font-black text-sm text-slate-700 dark:text-neutral-300 mb-2">
                       Labels
                     </p>
 
@@ -1892,7 +1911,7 @@ const Board = () => {
                     <button
                       type="button"
                       onClick={() => setIsEditing(false)}
-                      className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-semibold"
+                      className="px-4 py-2 rounded-xl border border-slate-200 dark:border-neutral-800 text-slate-600 dark:text-neutral-400 font-semibold"
                     >
                       Cancel
                     </button>

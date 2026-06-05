@@ -1,20 +1,63 @@
+import { useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import API from "../api/axios";
 
 const Profile = () => {
   const { user, logout } = useAuth();
   const { isDarkMode, toggleDarkMode } = useTheme();
 
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
+
+  const [passwordMessage, setPasswordMessage] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  const changePassword = async (e) => {
+    e.preventDefault();
+
+    setPasswordMessage("");
+    setPasswordError("");
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError("New password and confirm password do not match");
+      return;
+    }
+
+    try {
+      setIsChangingPassword(true);
+
+      const { data } = await API.put("/auth/change-password", passwordForm);
+
+      setPasswordMessage(data.message || "Password changed successfully");
+      setPasswordForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+      });
+    } catch (error) {
+      setPasswordError(
+        error.response?.data?.message || "Could not change password"
+      );
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-black">
       <Sidebar />
 
-      <main className="flex-1 min-w-0 h-screen overflow-hidden flex flex-col">
+      <main className="flex-1 min-w-0 min-h-screen bg-slate-50 dark:bg-black">
         <Navbar />
 
-        <div className="flex-1 overflow-auto p-4 md:p-8 pb-28 lg:pb-8 max-w-6xl w-full mx-auto">
+        <div className="p-4 md:p-8 pb-28 lg:pb-8 max-w-6xl w-full mx-auto">
           <section className="glass-card rounded-3xl md:rounded-[32px] p-6 md:p-8 mb-6">
             <p className="text-sm font-black text-blue-600 uppercase tracking-wider">
               User Profile
@@ -30,10 +73,12 @@ const Profile = () => {
                   <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white">
                     {user?.name}
                   </h1>
-                  <p className="text-slate-500 dark:text-slate-400 mt-1">
+
+                  <p className="text-slate-500 dark:text-neutral-400 mt-1">
                     {user?.email}
                   </p>
-                  <span className="inline-flex mt-3 px-3 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100 text-xs font-black capitalize">
+
+                  <span className="inline-flex mt-3 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-900 text-xs font-black capitalize">
                     {user?.role}
                   </span>
                 </div>
@@ -48,8 +93,8 @@ const Profile = () => {
               </p>
 
               <div className="mt-5 space-y-4">
-                <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-5">
-                  <p className="text-xs font-black text-slate-400 uppercase">
+                <div className="rounded-2xl bg-white dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 p-5">
+                  <p className="text-xs font-black text-slate-400 dark:text-neutral-500 uppercase">
                     Full Name
                   </p>
                   <p className="font-black text-slate-900 dark:text-white mt-1">
@@ -57,8 +102,8 @@ const Profile = () => {
                   </p>
                 </div>
 
-                <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-5">
-                  <p className="text-xs font-black text-slate-400 uppercase">
+                <div className="rounded-2xl bg-white dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 p-5">
+                  <p className="text-xs font-black text-slate-400 dark:text-neutral-500 uppercase">
                     Email Address
                   </p>
                   <p className="font-black text-slate-900 dark:text-white mt-1">
@@ -66,8 +111,8 @@ const Profile = () => {
                   </p>
                 </div>
 
-                <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-5">
-                  <p className="text-xs font-black text-slate-400 uppercase">
+                <div className="rounded-2xl bg-white dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 p-5">
+                  <p className="text-xs font-black text-slate-400 dark:text-neutral-500 uppercase">
                     Workspace Role
                   </p>
                   <p className="font-black text-slate-900 dark:text-white mt-1 capitalize">
@@ -83,18 +128,19 @@ const Profile = () => {
               </p>
 
               <div className="mt-5 space-y-4">
-                <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-5">
+                <div className="rounded-2xl bg-white dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 p-5">
                   <div className="flex items-center justify-between gap-4">
                     <div>
                       <p className="font-black text-slate-900 dark:text-white">
                         Dark Mode
                       </p>
-                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                      <p className="text-sm text-slate-500 dark:text-neutral-400 mt-1">
                         Switch the website appearance.
                       </p>
                     </div>
 
                     <button
+                      type="button"
                       onClick={toggleDarkMode}
                       className={`w-14 h-8 rounded-full p-1 transition ${
                         isDarkMode ? "bg-blue-600" : "bg-slate-300"
@@ -109,22 +155,82 @@ const Profile = () => {
                   </div>
                 </div>
 
-                <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-5">
+                <div className="rounded-2xl bg-white dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 p-5">
                   <p className="font-black text-slate-900 dark:text-white">
                     Workspace Access
                   </p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  <p className="text-sm text-slate-500 dark:text-neutral-400 mt-1">
                     Your project and task access is managed by the admin.
                   </p>
                 </div>
 
-                <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-5">
+                <div className="rounded-2xl bg-white dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 p-5">
                   <p className="font-black text-slate-900 dark:text-white">
-                    Security
+                    Change Password
                   </p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                    Password changes can be handled by the workspace admin.
+                  <p className="text-sm text-slate-500 dark:text-neutral-400 mt-1">
+                    Update your password securely.
                   </p>
+
+                  <form onSubmit={changePassword} className="space-y-3 mt-4">
+                    <input
+                      type="password"
+                      value={passwordForm.currentPassword}
+                      onChange={(e) =>
+                        setPasswordForm({
+                          ...passwordForm,
+                          currentPassword: e.target.value
+                        })
+                      }
+                      placeholder="Current password"
+                      className="input-modern"
+                    />
+
+                    <input
+                      type="password"
+                      value={passwordForm.newPassword}
+                      onChange={(e) =>
+                        setPasswordForm({
+                          ...passwordForm,
+                          newPassword: e.target.value
+                        })
+                      }
+                      placeholder="New password"
+                      className="input-modern"
+                    />
+
+                    <input
+                      type="password"
+                      value={passwordForm.confirmPassword}
+                      onChange={(e) =>
+                        setPasswordForm({
+                          ...passwordForm,
+                          confirmPassword: e.target.value
+                        })
+                      }
+                      placeholder="Confirm new password"
+                      className="input-modern"
+                    />
+
+                    {passwordMessage && (
+                      <p className="text-sm font-bold text-emerald-600">
+                        {passwordMessage}
+                      </p>
+                    )}
+
+                    {passwordError && (
+                      <p className="text-sm font-bold text-red-600">
+                        {passwordError}
+                      </p>
+                    )}
+
+                    <button
+                      disabled={isChangingPassword}
+                      className="btn-primary w-full disabled:opacity-50"
+                    >
+                      {isChangingPassword ? "Updating..." : "Update Password"}
+                    </button>
+                  </form>
                 </div>
 
                 <button

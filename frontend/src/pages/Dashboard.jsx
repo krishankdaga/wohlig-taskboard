@@ -24,7 +24,7 @@ const statusLabels = {
 };
 
 const statusStyles = {
-  backlog: "bg-slate-50 text-slate-700 border-slate-200",
+  backlog: "bg-slate-50 dark:bg-neutral-950 text-slate-700 border-slate-200 dark:border-neutral-800",
   todo: "bg-blue-50 text-blue-700 border-blue-200",
   in_progress: "bg-amber-50 text-amber-700 border-amber-200",
   review: "bg-violet-50 text-violet-700 border-violet-200",
@@ -38,7 +38,7 @@ const StatCard = ({ title, value, subtitle, tone = "blue" }) => {
     red: "bg-red-50 border-red-100 text-red-900",
     emerald: "bg-emerald-50 border-emerald-100 text-emerald-900",
     violet: "bg-violet-50 border-violet-100 text-violet-900",
-    slate: "bg-slate-50 border-slate-200 text-slate-900"
+    slate: "bg-slate-50 dark:bg-neutral-950 border-slate-200 dark:border-neutral-800 text-slate-900 dark:text-white"
   };
 
   return (
@@ -57,7 +57,7 @@ const ChartCard = ({ title, subtitle, children }) => {
         <p className="text-sm font-black text-blue-600 uppercase tracking-wider">
           {subtitle}
         </p>
-        <h2 className="text-2xl font-black text-slate-900 mt-1">
+        <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
           {title}
         </h2>
       </div>
@@ -187,10 +187,10 @@ const Dashboard = () => {
   }, [tasks]);
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-neutral-950 dark:bg-slate-950">
       <Sidebar />
 
-      <main className="flex-1 min-h-screen bg-slate-50 dark:bg-slate-950">
+      <main className="flex-1 min-h-screen bg-slate-50 dark:bg-neutral-950 dark:bg-slate-950">
         <Navbar />
 
         <div className="p-4 md:p-8 pb-28 lg:pb-8 max-w-7xl mx-auto">
@@ -201,18 +201,18 @@ const Dashboard = () => {
                   Dashboard
                 </p>
 
-                <h1 className="text-4xl font-black text-slate-900 mt-2 tracking-tight">
+                <h1 className="text-4xl font-black text-slate-900 dark:text-white mt-2 tracking-tight">
                   Welcome, {user?.name}
                 </h1>
 
-                <p className="text-slate-500 mt-3 max-w-2xl">
+                <p className="text-slate-500 dark:text-neutral-400 mt-3 max-w-2xl">
                   Here is your current workspace overview, task workload, and project progress.
                 </p>
               </div>
 
               <button
                 onClick={fetchDashboardData}
-                className="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-sm font-black text-slate-600 hover:bg-slate-50"
+                className="px-5 py-3 rounded-2xl bg-white dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 text-sm font-black text-slate-600 hover:bg-slate-50 dark:bg-neutral-950"
               >
                 Refresh Dashboard
               </button>
@@ -288,7 +288,7 @@ const Dashboard = () => {
                 <p className="text-sm font-black text-blue-600 uppercase tracking-wider">
                   Task Status
                 </p>
-                <h2 className="text-2xl font-black text-slate-900 mt-1">
+                <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
                   Progress Summary
                 </h2>
               </div>
@@ -297,7 +297,7 @@ const Dashboard = () => {
                 {Object.entries(dashboardStats.byStatus).map(([status, count]) => (
                   <div
                     key={status}
-                    className="flex items-center justify-between rounded-2xl bg-white border border-slate-100 p-4"
+                    className="flex items-center justify-between rounded-2xl bg-white dark:bg-neutral-950 border border-slate-100 dark:border-neutral-800 p-4"
                   >
                     <span
                       className={`text-xs font-black px-3 py-1 rounded-full border ${statusStyles[status]}`}
@@ -305,7 +305,7 @@ const Dashboard = () => {
                       {statusLabels[status]}
                     </span>
 
-                    <p className="text-xl font-black text-slate-900">
+                    <p className="text-xl font-black text-slate-900 dark:text-white">
                       {count}
                     </p>
                   </div>
@@ -319,7 +319,7 @@ const Dashboard = () => {
                   <p className="text-sm font-black text-violet-600 uppercase tracking-wider">
                     Recent Work
                   </p>
-                  <h2 className="text-2xl font-black text-slate-900 mt-1">
+                  <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
                     Recently Updated Tasks
                   </h2>
                 </div>
@@ -327,7 +327,7 @@ const Dashboard = () => {
 
               {recentTasks.length === 0 ? (
                 <div className="rounded-3xl border border-dashed border-slate-300 p-12 text-center">
-                  <p className="text-slate-400 font-bold">
+                  <p className="text-slate-400 dark:text-neutral-500 font-bold">
                     No tasks yet.
                   </p>
                 </div>
@@ -336,7 +336,7 @@ const Dashboard = () => {
                   {recentTasks.map((task) => (
                     <div
                       key={task._id}
-                      className="bg-white border border-slate-100 rounded-3xl p-5 hover:shadow-sm transition"
+                      className="bg-white dark:bg-neutral-950 border border-slate-100 dark:border-neutral-800 rounded-3xl p-5 hover:shadow-sm transition"
                     >
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                         <div>
@@ -347,12 +347,12 @@ const Dashboard = () => {
                               </span>
                             )}
 
-                            <h3 className="font-black text-slate-900">
+                            <h3 className="font-black text-slate-900 dark:text-white">
                               {task.title}
                             </h3>
                           </div>
 
-                          <p className="text-sm text-slate-500 mt-2">
+                          <p className="text-sm text-slate-500 dark:text-neutral-400 mt-2">
                             {task.project?.name} ·{" "}
                             {Array.isArray(task.assignedTo)
                               ? task.assignedTo.map((employee) => employee.name).join(", ")
@@ -367,7 +367,7 @@ const Dashboard = () => {
                             {statusLabels[task.status]}
                           </span>
 
-                          <span className="text-xs font-black px-3 py-1 rounded-full border bg-white text-slate-500 border-slate-200">
+                          <span className="text-xs font-black px-3 py-1 rounded-full border bg-white dark:bg-neutral-950 text-slate-500 dark:text-neutral-400 border-slate-200 dark:border-neutral-800">
                             {task.priority}
                           </span>
                         </div>

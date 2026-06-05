@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import API from "../api/axios";
 import Sidebar from "../components/Sidebar";
@@ -376,7 +377,7 @@ const Admin = () => {
     `px-4 md:px-5 py-2.5 md:py-3 rounded-2xl text-xs md:text-sm font-bold transition whitespace-nowrap ${
       activeTab === tab
         ? "bg-slate-900 text-white shadow-lg"
-        : "bg-white text-slate-500 border border-slate-200 hover:bg-slate-50"
+        : "bg-white text-slate-500 dark:text-neutral-400 border border-slate-200 hover:bg-slate-50"
     }`;
 
   return (
@@ -394,11 +395,11 @@ const Admin = () => {
                   Admin Control Center
                 </p>
 
-                <h1 className="text-2xl md:text-4xl font-black text-slate-900 mt-2 tracking-tight">
+                <h1 className="text-2xl md:text-4xl font-black text-slate-900 dark:text-white mt-2 tracking-tight">
                   Workspace Setup
                 </h1>
 
-                <p className="text-slate-500 mt-3 max-w-2xl">
+                <p className="text-slate-500 dark:text-neutral-400 mt-3 max-w-2xl">
                   Create projects, assign team members, manage users, and keep your workspace clean.
                 </p>
               </div>
@@ -448,7 +449,7 @@ const Admin = () => {
             </button>
 
             <button onClick={() => setActiveTab("manage")} className={tabClass("manage")}>
-              🧹 Manage Projects
+              Manage Projects
             </button>
 
             <button onClick={() => setActiveTab("archived")} className={tabClass("archived")}>
@@ -471,10 +472,10 @@ const Admin = () => {
                   <p className="text-sm font-black text-blue-600 uppercase tracking-wider">
                     Project Builder
                   </p>
-                  <h2 className="text-xl md:text-3xl font-black text-slate-900 mt-1">
+                  <h2 className="text-xl md:text-3xl font-black text-slate-900 dark:text-white mt-1">
                     Create a project
                   </h2>
-                  <p className="text-slate-500 mt-2">
+                  <p className="text-slate-500 dark:text-neutral-400 mt-2">
                     Choose whether this is a main project or a sub-project.
                   </p>
                 </div>
@@ -491,7 +492,7 @@ const Admin = () => {
                     className={`rounded-3xl border p-5 text-left transition ${
                       projectType === "main"
                         ? "bg-blue-50 border-blue-300 text-blue-700"
-                        : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                        : "bg-white border-slate-200 text-slate-600 dark:text-neutral-400 hover:bg-slate-50"
                     }`}
                   >
                     <p className="text-lg font-black">Main Project</p>
@@ -504,7 +505,7 @@ const Admin = () => {
                     className={`rounded-3xl border p-5 text-left transition ${
                       projectType === "sub"
                         ? "bg-violet-50 border-violet-300 text-violet-700"
-                        : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                        : "bg-white border-slate-200 text-slate-600 dark:text-neutral-400 hover:bg-slate-50"
                     }`}
                   >
                     <p className="text-lg font-black">Sub Project</p>
@@ -514,7 +515,7 @@ const Admin = () => {
 
                 {projectType === "sub" && (
                   <div className="bg-violet-50 border border-violet-100 rounded-3xl p-5">
-                    <label className="font-black text-sm mb-2 text-slate-700 block">
+                    <label className="font-black text-sm mb-2 text-slate-700 dark:text-neutral-300 block">
                       Choose parent project
                     </label>
 
@@ -564,7 +565,7 @@ const Admin = () => {
 
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <p className="font-black text-sm text-slate-700">
+                    <p className="font-black text-sm text-slate-700 dark:text-neutral-300">
                       Assign Members
                     </p>
 
@@ -573,7 +574,7 @@ const Admin = () => {
                         Select all
                       </button>
 
-                      <button type="button" onClick={clearEmployees} className="text-xs font-black text-slate-400">
+                      <button type="button" onClick={clearEmployees} className="text-xs font-black text-slate-400 dark:text-neutral-500">
                         Clear
                       </button>
                     </div>
@@ -591,7 +592,7 @@ const Admin = () => {
                       >
                         <span>
                           <span className="font-black text-slate-800">{user.name}</span>
-                          <span className="text-slate-400"> · {user.role}</span>
+                          <span className="text-slate-400 dark:text-neutral-500"> · {user.role}</span>
                         </span>
 
                         <input
@@ -620,10 +621,10 @@ const Admin = () => {
                 <p className="text-sm font-black text-violet-600 uppercase tracking-wider">
                   Task Creator
                 </p>
-                <h2 className="text-xl md:text-3xl font-black text-slate-900 mt-1">
+                <h2 className="text-xl md:text-3xl font-black text-slate-900 dark:text-white mt-1">
                   Create a task
                 </h2>
-                <p className="text-slate-500 mt-2">
+                <p className="text-slate-500 dark:text-neutral-400 mt-2">
                   Assign one task to multiple employees.
                 </p>
               </div>
@@ -688,7 +689,7 @@ const Admin = () => {
                 </div>
 
                 <div>
-                  <p className="font-black text-sm text-slate-700 mb-3">
+                  <p className="font-black text-sm text-slate-700 dark:text-neutral-300 mb-3">
                     Labels
                   </p>
 
@@ -723,7 +724,7 @@ const Admin = () => {
                 </div>
 
                 <div>
-                  <p className="font-black text-sm text-slate-700 mb-3">
+                  <p className="font-black text-sm text-slate-700 dark:text-neutral-300 mb-3">
                     Assign Employees
                   </p>
 
@@ -739,7 +740,7 @@ const Admin = () => {
                       >
                         <span>
                           <span className="font-black text-slate-800">{user.name}</span>
-                          <span className="text-slate-400"> · {user.role}</span>
+                          <span className="text-slate-400 dark:text-neutral-500"> · {user.role}</span>
                         </span>
 
                         <input
@@ -752,7 +753,7 @@ const Admin = () => {
                     ))}
                   </div>
 
-                  <p className="text-sm text-slate-500 mt-2">
+                  <p className="text-sm text-slate-500 dark:text-neutral-400 mt-2">
                     {taskForm.assignedTo.length} employee(s) selected.
                   </p>
                 </div>
@@ -772,10 +773,10 @@ const Admin = () => {
                 <p className="text-sm font-black text-blue-600 uppercase tracking-wider">
                   Project Members
                 </p>
-                <h2 className="text-xl md:text-3xl font-black text-slate-900 mt-1">
+                <h2 className="text-xl md:text-3xl font-black text-slate-900 dark:text-white mt-1">
                   Edit project members
                 </h2>
-                <p className="text-slate-500 mt-2">
+                <p className="text-slate-500 dark:text-neutral-400 mt-2">
                   Add or remove employees from existing projects.
                 </p>
               </div>
@@ -817,7 +818,7 @@ const Admin = () => {
                         >
                           <span>
                             <span className="font-black text-slate-800">{user.name}</span>
-                            <span className="text-slate-400"> · {user.role}</span>
+                            <span className="text-slate-400 dark:text-neutral-500"> · {user.role}</span>
                           </span>
 
                           <input
@@ -848,17 +849,17 @@ const Admin = () => {
                   <p className="text-sm font-black text-red-500 uppercase tracking-wider">
                     Project Management
                   </p>
-                  <h2 className="text-xl md:text-3xl font-black text-slate-900 mt-1">
+                  <h2 className="text-xl md:text-3xl font-black text-slate-900 dark:text-white mt-1">
                     Manage projects
                   </h2>
-                  <p className="text-slate-500 mt-2">
+                  <p className="text-slate-500 dark:text-neutral-400 mt-2">
                     Delete empty projects safely.
                   </p>
                 </div>
 
                 <button
                   onClick={fetchData}
-                  className="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-sm font-black text-slate-600 hover:bg-slate-50"
+                  className="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-sm font-black text-slate-600 dark:text-neutral-400 hover:bg-slate-50"
                 >
                   Refresh
                 </button>
@@ -868,13 +869,13 @@ const Admin = () => {
                 {projectOptions.map((project) => (
                   <div
                     key={project._id}
-                    className="flex items-center justify-between gap-4 bg-white border border-slate-100 rounded-3xl px-5 py-4 hover:shadow-sm transition"
+                    className="flex items-center justify-between gap-4 bg-white dark:bg-neutral-950 border border-slate-100 dark:border-neutral-800 rounded-3xl px-5 py-4 hover:shadow-sm transition"
                   >
                     <div>
                       <p className="text-sm font-black text-slate-800">
                         {project.name}
                       </p>
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-slate-400 dark:text-neutral-500 mt-1">
                         {project.level === 0
                           ? "Main Project"
                           : `Sub Project · Level ${project.level}`}
@@ -900,17 +901,17 @@ const Admin = () => {
                   <p className="text-sm font-black text-amber-600 uppercase tracking-wider">
                     Archived Tasks
                   </p>
-                  <h2 className="text-xl md:text-3xl font-black text-slate-900 mt-1">
+                  <h2 className="text-xl md:text-3xl font-black text-slate-900 dark:text-white mt-1">
                     Restore archived tasks
                   </h2>
-                  <p className="text-slate-500 mt-2">
+                  <p className="text-slate-500 dark:text-neutral-400 mt-2">
                     Archived tasks are hidden from the board but their data is preserved.
                   </p>
                 </div>
 
                 <button
                   onClick={fetchArchivedTasks}
-                  className="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-sm font-black text-slate-600 hover:bg-slate-50"
+                  className="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-sm font-black text-slate-600 dark:text-neutral-400 hover:bg-slate-50"
                 >
                   Refresh
                 </button>
@@ -918,7 +919,7 @@ const Admin = () => {
 
               {archivedTasks.length === 0 ? (
                 <div className="rounded-3xl border border-dashed border-slate-300 p-12 text-center">
-                  <p className="text-slate-400 font-bold">
+                  <p className="text-slate-400 dark:text-neutral-500 font-bold">
                     No archived tasks yet.
                   </p>
                 </div>
@@ -927,7 +928,7 @@ const Admin = () => {
                   {archivedTasks.map((task) => (
                     <div
                       key={task._id}
-                      className="bg-white border border-slate-100 rounded-3xl p-5 hover:shadow-sm transition"
+                      className="bg-white dark:bg-neutral-950 border border-slate-100 dark:border-neutral-800 rounded-3xl p-5 hover:shadow-sm transition"
                     >
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div>
@@ -938,17 +939,17 @@ const Admin = () => {
                               </span>
                             )}
 
-                            <h3 className="font-black text-slate-900">
+                            <h3 className="font-black text-slate-900 dark:text-white">
                               {task.title}
                             </h3>
                           </div>
 
-                          <p className="text-sm text-slate-500 mt-2">
+                          <p className="text-sm text-slate-500 dark:text-neutral-400 mt-2">
                             {task.project?.name || "No project"} ·{" "}
                             {task.assignedTo?.map((employee) => employee.name).join(", ")}
                           </p>
 
-                          <p className="text-xs text-slate-400 mt-1">
+                          <p className="text-xs text-slate-400 dark:text-neutral-500 mt-1">
                             Archived{" "}
                             {task.archivedAt
                               ? new Date(task.archivedAt).toLocaleString("en-IN", {
@@ -992,24 +993,24 @@ const Admin = () => {
                 <p className="text-sm font-black text-blue-600 uppercase tracking-wider">
                   Reports
                 </p>
-                <h2 className="text-xl md:text-3xl font-black text-slate-900 mt-1">
+                <h2 className="text-xl md:text-3xl font-black text-slate-900 dark:text-white mt-1">
                   Export workspace data
                 </h2>
-                <p className="text-slate-500 mt-2">
+                <p className="text-slate-500 dark:text-neutral-400 mt-2">
                   Download CSV reports for tasks, users, and projects.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-5">
-                <div className="bg-white border border-slate-100 rounded-2xl md:rounded-3xl p-4 md:p-6">
+                <div className="bg-white dark:bg-neutral-950 border border-slate-100 dark:border-neutral-800 rounded-2xl md:rounded-3xl p-4 md:p-6">
                   <div className="h-12 w-12 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center text-2xl mb-5">
                     
                   </div>
 
-                  <h3 className="text-xl font-black text-slate-900">
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white">
                     Active Tasks
                   </h3>
-                  <p className="text-sm text-slate-500 mt-2">
+                  <p className="text-sm text-slate-500 dark:text-neutral-400 mt-2">
                     Export all active non-archived tasks with project, assignees, status, priority, labels, and progress.
                   </p>
 
@@ -1023,15 +1024,15 @@ const Admin = () => {
                   </button>
                 </div>
 
-                <div className="bg-white border border-slate-100 rounded-2xl md:rounded-3xl p-4 md:p-6">
+                <div className="bg-white dark:bg-neutral-950 border border-slate-100 dark:border-neutral-800 rounded-2xl md:rounded-3xl p-4 md:p-6">
                   <div className="h-12 w-12 rounded-2xl bg-red-50 text-red-700 flex items-center justify-center text-2xl mb-5">
                     
                   </div>
 
-                  <h3 className="text-xl font-black text-slate-900">
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white">
                     Overdue Tasks
                   </h3>
-                  <p className="text-sm text-slate-500 mt-2">
+                  <p className="text-sm text-slate-500 dark:text-neutral-400 mt-2">
                     Export tasks that are overdue and not closed, sorted by due date.
                   </p>
 
@@ -1048,15 +1049,15 @@ const Admin = () => {
                   </button>
                 </div>
 
-                <div className="bg-white border border-slate-100 rounded-2xl md:rounded-3xl p-4 md:p-6">
+                <div className="bg-white dark:bg-neutral-950 border border-slate-100 dark:border-neutral-800 rounded-2xl md:rounded-3xl p-4 md:p-6">
                   <div className="h-12 w-12 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center text-2xl mb-5">
                     
                   </div>
 
-                  <h3 className="text-xl font-black text-slate-900">
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white">
                     Archived Tasks
                   </h3>
-                  <p className="text-sm text-slate-500 mt-2">
+                  <p className="text-sm text-slate-500 dark:text-neutral-400 mt-2">
                     Export archived tasks for audit and backup purposes.
                   </p>
 
@@ -1073,15 +1074,15 @@ const Admin = () => {
                   </button>
                 </div>
 
-                <div className="bg-white border border-slate-100 rounded-2xl md:rounded-3xl p-4 md:p-6">
+                <div className="bg-white dark:bg-neutral-950 border border-slate-100 dark:border-neutral-800 rounded-2xl md:rounded-3xl p-4 md:p-6">
                   <div className="h-12 w-12 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-2xl mb-5">
                     
                   </div>
 
-                  <h3 className="text-xl font-black text-slate-900">
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white">
                     Users
                   </h3>
-                  <p className="text-sm text-slate-500 mt-2">
+                  <p className="text-sm text-slate-500 dark:text-neutral-400 mt-2">
                     Export all users with name, email, role, and creation date.
                   </p>
 
@@ -1095,15 +1096,15 @@ const Admin = () => {
                   </button>
                 </div>
 
-                <div className="bg-white border border-slate-100 rounded-2xl md:rounded-3xl p-4 md:p-6">
+                <div className="bg-white dark:bg-neutral-950 border border-slate-100 dark:border-neutral-800 rounded-2xl md:rounded-3xl p-4 md:p-6">
                   <div className="h-12 w-12 rounded-2xl bg-violet-50 text-violet-700 flex items-center justify-center text-2xl mb-5">
                     
                   </div>
 
-                  <h3 className="text-xl font-black text-slate-900">
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white">
                     Projects
                   </h3>
-                  <p className="text-sm text-slate-500 mt-2">
+                  <p className="text-sm text-slate-500 dark:text-neutral-400 mt-2">
                     Export projects, parent projects, members, and descriptions.
                   </p>
 
@@ -1126,17 +1127,17 @@ const Admin = () => {
                 <p className="text-sm font-black text-blue-600 uppercase tracking-wider">
                   User Management
                 </p>
-                <h2 className="text-xl md:text-3xl font-black text-slate-900 mt-1">
+                <h2 className="text-xl md:text-3xl font-black text-slate-900 dark:text-white mt-1">
                   Manage users
                 </h2>
-                <p className="text-slate-500 mt-2">
+                <p className="text-slate-500 dark:text-neutral-400 mt-2">
                   Create users, assign roles, and remove accounts.
                 </p>
               </div>
 
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 md:gap-8">
-                <div className="bg-white border border-slate-100 rounded-2xl md:rounded-3xl p-4 md:p-6">
-                  <h3 className="text-xl font-black text-slate-900 mb-5">
+                <div className="bg-white dark:bg-neutral-950 border border-slate-100 dark:border-neutral-800 rounded-2xl md:rounded-3xl p-4 md:p-6">
+                  <h3 className="text-xl font-black text-slate-900 dark:text-white mb-5">
                     Create new user
                   </h3>
 
@@ -1190,15 +1191,15 @@ const Admin = () => {
                   </form>
                 </div>
 
-                <div className="bg-white border border-slate-100 rounded-2xl md:rounded-3xl p-4 md:p-6">
+                <div className="bg-white dark:bg-neutral-950 border border-slate-100 dark:border-neutral-800 rounded-2xl md:rounded-3xl p-4 md:p-6">
                   <div className="flex items-center justify-between mb-5">
-                    <h3 className="text-xl font-black text-slate-900">
+                    <h3 className="text-xl font-black text-slate-900 dark:text-white">
                       Existing users
                     </h3>
 
                     <button
                       onClick={fetchData}
-                      className="px-4 py-2 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-black text-slate-600"
+                      className="px-4 py-2 rounded-2xl bg-slate-50 dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 text-xs font-black text-slate-600 dark:text-neutral-400"
                     >
                       Refresh
                     </button>
@@ -1208,14 +1209,14 @@ const Admin = () => {
                     {users.map((appUser) => (
                       <div
                         key={appUser._id}
-                        className="bg-slate-50 border border-slate-200 rounded-2xl md:rounded-3xl p-3 md:p-4"
+                        className="bg-slate-50 dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-2xl md:rounded-3xl p-3 md:p-4"
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div>
-                            <p className="font-black text-slate-900">
+                            <p className="font-black text-slate-900 dark:text-white">
                               {appUser.name}
                             </p>
-                            <p className="text-sm text-slate-500">
+                            <p className="text-sm text-slate-500 dark:text-neutral-400">
                               {appUser.email}
                             </p>
                             {appUser._id === loggedInUser?._id && (
@@ -1230,7 +1231,7 @@ const Admin = () => {
                           </span>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
                           <select
                             value={appUser.role}
                             onChange={(e) =>
@@ -1242,6 +1243,13 @@ const Admin = () => {
                             <option value="employee">Employee</option>
                             <option value="admin">Admin</option>
                           </select>
+
+                          <Link
+                            to={`/admin/users/${appUser._id}`}
+                            className="px-4 py-2 rounded-2xl bg-blue-50 text-blue-700 border border-blue-100 text-sm font-black hover:bg-blue-100 text-center flex items-center justify-center"
+                          >
+                            View Profile
+                          </Link>
 
                           <button
                             onClick={() => deleteUser(appUser._id, appUser.name)}

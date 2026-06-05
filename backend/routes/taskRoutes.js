@@ -58,7 +58,7 @@ const upload = multer({
 const populateTask = (query) => {
   return query
     .populate("assignedTo", "name email")
-    .populate("project", "name")
+    .populate({ path: "project", select: "name parentProject projectLeads", populate: { path: "projectLeads.user", select: "name email role" } })
     .populate("comments.user", "name email role")
     .populate("activityLogs.user", "name email role")
     .populate("attachments.uploadedBy", "name email role")
@@ -83,6 +83,43 @@ const isUserAssignedToTask = (task, user) => {
   return task.assignedTo.some(
     (id) => id.toString() === user._id.toString()
   );
+};
+
+const isUserProjectLead = async (projectId, user) => {
+  if (user.role === "admin") return true;
+
+  const project = await Project.findById(projectId);
+
+  if (!project) return false;
+
+  return (project.projectLeads || []).some(
+    (lead) => lead.user.toString() === user._id.toString()
+  );
+};
+
+const adminOrProjectLead = async (req, res, next) => {
+  try {
+    if (req.user.role === "admin") return next();
+
+    const task = await Task.findById(req.params.id || req.params.taskId);
+
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    const isLead = await isUserProjectLead(task.project, req.user);
+
+    if (!isLead) {
+      return res.status(403).json({
+        message: "Only admin or project lead can perform this action"
+      });
+    }
+
+    req.permissionTask = task;
+    next();
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
 router.post("/", protect, adminOnly, async (req, res) => {
@@ -270,7 +307,7 @@ router.put("/:id/restore", protect, adminOnly, async (req, res) => {
   }
 });
 
-router.put("/:id", protect, adminOnly, async (req, res) => {
+router.put("/:id", protect, adminOrProjectLead, async (req, res) => {
   try {
     const task = await Task.findById(req.params.id);
 
