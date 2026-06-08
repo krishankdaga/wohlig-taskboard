@@ -20,6 +20,7 @@ const isTaskOverdue = (task) => {
 
 router.post("/overdue", protect, adminOnly, async (req, res) => {
   try {
+    console.log("Starting overdue reminder check...");
     const tasks = await Task.find({
       isArchived: { $ne: true },
       status: { $ne: "closed" },
@@ -30,6 +31,7 @@ router.post("/overdue", protect, adminOnly, async (req, res) => {
       .sort({ dueDate: 1 });
 
     const overdueTasks = tasks.filter(isTaskOverdue);
+    console.log("Overdue tasks found:", overdueTasks.length);
 
     if (overdueTasks.length === 0) {
       return res.json({
@@ -106,6 +108,14 @@ router.post("/overdue", protect, adminOnly, async (req, res) => {
 
       await task.save();
     }
+
+    console.log("Overdue reminders completed:", {
+      overdueTasks: overdueTasks.length,
+      notificationsSent,
+      emailsSent,
+      emailsFailed,
+      usersNotified: notifiedUsers.size
+    });
 
     res.json({
       message: "Overdue reminders sent successfully.",
