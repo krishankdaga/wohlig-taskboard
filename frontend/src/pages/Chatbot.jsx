@@ -27,6 +27,7 @@ const Chatbot = () => {
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
   const [pendingTaskDraft, setPendingTaskDraft] = useState(null);
+  const [pendingActionDraft, setPendingActionDraft] = useState(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({
@@ -62,8 +63,13 @@ const Chatbot = () => {
 
       if (data.mode === "task_draft" && data.taskDraft) {
         setPendingTaskDraft(data.taskDraft);
+        setPendingActionDraft(null);
+      } else if (data.mode === "task_action_draft" && data.actionDraft) {
+        setPendingActionDraft(data.actionDraft);
+        setPendingTaskDraft(null);
       } else {
         setPendingTaskDraft(null);
+        setPendingActionDraft(null);
       }
 
       setMessages((prev) => [
@@ -137,6 +143,52 @@ const Chatbot = () => {
       {
         role: "bot",
         text: "Task creation cancelled."
+      }
+    ]);
+  };
+
+  const executeActionDraft = async () => {
+    if (!pendingActionDraft) return;
+
+    try {
+      setLoading(true);
+
+      const { data } = await API.post("/chatbot/execute-action", {
+        actionDraft: pendingActionDraft
+      });
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "bot",
+          text: data.message || "Action applied successfully."
+        }
+      ]);
+
+      setPendingActionDraft(null);
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "bot",
+          text:
+            error.response?.data?.message ||
+            "Could not apply this action."
+        }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const cancelActionDraft = () => {
+    setPendingActionDraft(null);
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "bot",
+        text: "Action cancelled."
       }
     ]);
   };
@@ -247,6 +299,34 @@ const Chatbot = () => {
                         <button
                           type="button"
                           onClick={cancelTaskDraft}
+                          className="px-4 py-2 rounded-2xl border border-slate-200 dark:border-neutral-800 text-slate-600 dark:text-neutral-300 font-black"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {pendingActionDraft && (
+                  <div className="shrink-0 bg-white dark:bg-neutral-950 border-t border-slate-200 dark:border-neutral-800 p-3 md:p-4">
+                    <div className="rounded-2xl border border-violet-100 dark:border-violet-900 bg-violet-50 dark:bg-violet-950/20 p-4">
+                      <p className="text-sm font-black text-violet-700 dark:text-violet-300">
+                        Action draft ready for confirmation
+                      </p>
+
+                      <div className="flex flex-col sm:flex-row gap-2 mt-3">
+                        <button
+                          type="button"
+                          onClick={executeActionDraft}
+                          className="btn-primary"
+                        >
+                          Confirm Action
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={cancelActionDraft}
                           className="px-4 py-2 rounded-2xl border border-slate-200 dark:border-neutral-800 text-slate-600 dark:text-neutral-300 font-black"
                         >
                           Cancel

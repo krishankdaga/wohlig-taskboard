@@ -178,6 +178,193 @@ const detectTaskCreationRequest = (question) => {
   );
 };
 
+const detectTaskActionRequest = (question) => {
+  const q = question.toLowerCase();
+
+  if (detectTaskCreationRequest(question)) return false;
+
+  return (
+    q.includes("move ") ||
+    q.includes("change ") ||
+    q.includes("update ") ||
+    q.includes("assign ") ||
+    q.includes("reassign ") ||
+    q.includes("comment ") ||
+    q.includes("add comment") ||
+    q.includes("add a comment") ||
+    q.includes("set ")
+  );
+};
+
+const normalizeStatus = (value) => {
+  const q = (value || "").toLowerCase().trim();
+
+  if (q.includes("backlog")) return "backlog";
+  if (q.includes("to do") || q.includes("todo")) return "todo";
+  if (q.includes("progress")) return "in_progress";
+  if (q.includes("review")) return "review";
+  if (q.includes("closed") || q.includes("complete") || q.includes("done")) {
+    return "closed";
+  }
+
+  return "";
+};
+
+const normalizePriority = (value) => {
+  const q = (value || "").toLowerCase().trim();
+
+  if (q.includes("high")) return "high";
+  if (q.includes("medium")) return "medium";
+  if (q.includes("low")) return "low";
+
+  return "";
+};
+
+const extractTaskCode = (question) => {
+  const match = question.match(/WOH-\d+/i);
+  return match ? match[0].toUpperCase() : "";
+};
+
+const extractActionDraft = async (question, context) => {
+  const taskCode = extractTaskCode(question);
+  const q = question.toLowerCase();
+
+  if (!taskCode) {
+    return {
+      error: "Please include the task code, for example WOH-008."
+    };
+  }
+
+  const task = await Task.findOne({ taskCode })
+    .populate({
+      path: "project",
+      select: "name projectLeads members",
+      populate: { path: "projectLeads.user", select: "name email role" }
+    })
+    .populate("assignedTo", "name email role");
+
+  if (!task) {
+    return {
+      error: `I could not find a task with code ${taskCode}.`
+    };
+  }
+
+  const hasAccess =
+    context.tasks.some((item) => item.code === taskCode) ||
+    context.currentUser.role === "admin";
+
+  if (!hasAccess) {
+    return {
+      error: `You do not have access to ${taskCode}.`
+    };
+  }
+
+  let actionType = "";
+  let payload = {};
+
+  if (
+    q.includes("move") ||
+    q.includes("status") ||
+    q.includes("to review") ||
+    q.includes("to in progress") ||
+    q.includes("to todo") ||
+    q.includes("to do") ||
+    q.includes("to closed") ||
+    q.includes("complete")
+  ) {
+    const status = normalizeStatus(question);
+
+    if (status) {
+      actionType = "update_status";
+      payload.status = status;
+    }
+  }
+
+  if (q.includes("priority")) {
+    const priority = normalizePriority(question);
+
+    if (priority) {
+      actionType = "update_priority";
+      payload.priority = priority;
+    }
+  }
+
+  if (q.includes("assign") || q.includes("reassign")) {
+    const users = await User.find().select("name email role");
+
+    const matchedUsers = users.filter((user) => {
+      const name = user.name.toLowerCase();
+      const email = user.email.toLowerCase();
+      return q.includes(name) || q.includes(email);
+    });
+
+    if (matchedUsers.length > 0) {
+      actionType = "assign_task";
+      payload.assigneeIds = matchedUsers.map((user) => user._id.toString());
+      payload.assigneeNames = matchedUsers.map((user) => user.name);
+    }
+  }
+
+  if (q.includes("comment") || q.includes("add note")) {
+    let commentText = "";
+
+    const colonSplit = question.split(":");
+
+    if (colonSplit.length > 1) {
+      commentText = colonSplit.slice(1).join(":").trim();
+    } else {
+      commentText = question
+        .replace(/add a comment/i, "")
+        .replace(/add comment/i, "")
+        .replace(/comment/i, "")
+        .replace(taskCode, "")
+        .trim();
+    }
+
+    if (commentText) {
+      actionType = "add_comment";
+      payload.comment = commentText;
+    }
+  }
+
+  if (!actionType) {
+    return {
+      error:
+        "I understood this as a task action, but I could not identify whether to move status, change priority, assign user, or add comment."
+    };
+  }
+
+  return {
+    actionType,
+    taskId: task._id.toString(),
+    taskCode: task.taskCode,
+    taskTitle: task.title,
+    projectId: task.project?._id?.toString() || task.project?.toString(),
+    projectName: task.project?.name || "No project",
+    currentStatus: task.status,
+    currentPriority: task.priority,
+    payload
+  };
+};
+
+const canManageTaskAction = async (task, user) => {
+  if (user.role === "admin") return true;
+
+  const projectId = task.project?._id || task.project;
+
+  const project = await Project.findById(projectId);
+
+  if (!project) return false;
+
+  const isProjectLead = (project.projectLeads || []).some((lead) => {
+    return lead.user.toString() === user._id.toString();
+  });
+
+  return isProjectLead;
+};
+
+
+
 const extractTaskDraftWithGroq = async (question, context) => {
   if (!process.env.GROQ_API_KEY) return null;
 
@@ -452,6 +639,45 @@ router.post("/ask", protect, async (req, res) => {
       });
     }
 
+    if (detectTaskActionRequest(question)) {
+      const actionDraft = await extractActionDraft(question, context);
+
+      if (actionDraft.error) {
+        return res.json({
+          answer: actionDraft.error,
+          mode: "task_action_failed"
+        });
+      }
+
+      let actionText = "";
+
+      if (actionDraft.actionType === "update_status") {
+        actionText = `Move ${actionDraft.taskCode} - ${actionDraft.taskTitle} from ${actionDraft.currentStatus} to ${actionDraft.payload.status}`;
+      }
+
+      if (actionDraft.actionType === "update_priority") {
+        actionText = `Change ${actionDraft.taskCode} - ${actionDraft.taskTitle} priority from ${actionDraft.currentPriority} to ${actionDraft.payload.priority}`;
+      }
+
+      if (actionDraft.actionType === "assign_task") {
+        actionText = `Assign ${actionDraft.taskCode} - ${actionDraft.taskTitle} to ${actionDraft.payload.assigneeNames.join(", ")}`;
+      }
+
+      if (actionDraft.actionType === "add_comment") {
+        actionText = `Add comment to ${actionDraft.taskCode} - ${actionDraft.taskTitle}: ${actionDraft.payload.comment}`;
+      }
+
+      return res.json({
+        answer:
+          `I prepared this action:\n\n` +
+          `${actionText}\n\n` +
+          `Project: ${actionDraft.projectName}\n\n` +
+          `Confirm to apply this action.`,
+        mode: "task_action_draft",
+        actionDraft
+      });
+    }
+
     const aiAnswer = await answerWithGroq(question, context);
 
     if (aiAnswer) {
@@ -571,5 +797,147 @@ router.post("/create-task", protect, async (req, res) => {
     });
   }
 });
+
+
+router.post("/execute-action", protect, async (req, res) => {
+  try {
+    const { actionDraft } = req.body;
+
+    if (!actionDraft || !actionDraft.taskId || !actionDraft.actionType) {
+      return res.status(400).json({
+        message: "Invalid action draft"
+      });
+    }
+
+    const task = await Task.findById(actionDraft.taskId)
+      .populate("assignedTo", "name email role")
+      .populate("project", "name projectLeads");
+
+    if (!task) {
+      return res.status(404).json({
+        message: "Task not found"
+      });
+    }
+
+    const allowed = await canManageTaskAction(task, req.user);
+
+    const isAssignedUser = (task.assignedTo || []).some((assignee) => {
+      return assignee._id.toString() === req.user._id.toString();
+    });
+
+    if (!allowed && actionDraft.actionType !== "add_comment" && !isAssignedUser) {
+      return res.status(403).json({
+        message: "Only admin or project lead can perform this action"
+      });
+    }
+
+    if (actionDraft.actionType === "update_status") {
+      const oldStatus = task.status;
+      task.status = actionDraft.payload.status;
+
+      task.activityLogs.push({
+        user: req.user._id,
+        action: "Status Updated by Assistant",
+        details: `${task.taskCode} moved from ${oldStatus} to ${task.status}`
+      });
+    }
+
+    if (actionDraft.actionType === "update_priority") {
+      if (!allowed) {
+        return res.status(403).json({
+          message: "Only admin or project lead can change priority"
+        });
+      }
+
+      const oldPriority = task.priority;
+      task.priority = actionDraft.payload.priority;
+
+      task.activityLogs.push({
+        user: req.user._id,
+        action: "Priority Updated by Assistant",
+        details: `${task.taskCode} priority changed from ${oldPriority} to ${task.priority}`
+      });
+    }
+
+    if (actionDraft.actionType === "assign_task") {
+      if (!allowed) {
+        return res.status(403).json({
+          message: "Only admin or project lead can assign tasks"
+        });
+      }
+
+      task.assignedTo = actionDraft.payload.assigneeIds;
+
+      task.activityLogs.push({
+        user: req.user._id,
+        action: "Assignee Updated by Assistant",
+        details: `${task.taskCode} assigned to ${actionDraft.payload.assigneeNames.join(", ")}`
+      });
+    }
+
+    if (actionDraft.actionType === "add_comment") {
+      task.comments.push({
+        user: req.user._id,
+        text: actionDraft.payload.comment
+      });
+
+      task.activityLogs.push({
+        user: req.user._id,
+        action: "Comment Added by Assistant",
+        details: actionDraft.payload.comment
+      });
+    }
+
+    await task.save();
+
+    const populatedTask = await Task.findById(task._id)
+      .populate({
+        path: "project",
+        select: "name parentProject projectLeads",
+        populate: { path: "projectLeads.user", select: "name email role" }
+      })
+      .populate("assignedTo", "name email role")
+      .populate("createdBy", "name email role")
+      .populate("comments.user", "name email role")
+      .populate("activityLogs.user", "name email role");
+
+    const io = req.app.get("io");
+
+    io.emit("taskUpdated", populatedTask);
+
+    const Notification = require("../models/Notification");
+
+    const recipients = new Set();
+
+    (populatedTask.assignedTo || []).forEach((assignee) => {
+      recipients.add(assignee._id.toString());
+    });
+
+    recipients.delete(req.user._id.toString());
+
+    for (const recipientId of recipients) {
+      const notification = await Notification.create({
+        recipient: recipientId,
+        title: "Task Updated by Assistant",
+        message: `${populatedTask.taskCode} - ${populatedTask.title}`,
+        type: "task_status",
+        task: populatedTask._id,
+        project: populatedTask.project?._id || populatedTask.project
+      });
+
+      io.to(recipientId).emit("notificationCreated", notification);
+    }
+
+    res.json({
+      message: "Action applied successfully",
+      task: populatedTask
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message
+    });
+  }
+});
+
 
 module.exports = router;
