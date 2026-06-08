@@ -271,4 +271,64 @@ router.put("/change-password", protect, async (req, res) => {
 });
 
 
+
+router.put("/update-email", protect, async (req, res) => {
+  try {
+    const { newEmail, currentPassword } = req.body;
+
+    if (!newEmail || !currentPassword) {
+      return res.status(400).json({
+        message: "New email and current password are required"
+      });
+    }
+
+    const normalizedEmail = newEmail.toLowerCase().trim();
+
+    const existingUser = await User.findOne({
+      email: normalizedEmail,
+      _id: { $ne: req.user._id }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        message: "This email is already used by another account"
+      });
+    }
+
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found"
+      });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        message: "Current password is incorrect"
+      });
+    }
+
+    user.email = normalizedEmail;
+    await user.save();
+
+    res.json({
+      message: "Email updated successfully. Please login again with your new email.",
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message
+    });
+  }
+});
+
+
 module.exports = router;

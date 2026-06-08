@@ -2,6 +2,7 @@ const express = require("express");
 const Task = require("../models/Task");
 const Notification = require("../models/Notification");
 const { protect, adminOnly } = require("../middleware/authMiddleware");
+const sendEmail = require("../utils/sendEmail");
 
 const router = express.Router();
 
@@ -40,6 +41,8 @@ router.post("/overdue", protect, adminOnly, async (req, res) => {
 
     const io = req.app.get("io");
     let notificationsSent = 0;
+    let emailsSent = 0;
+    let emailsFailed = 0;
     const notifiedUsers = new Set();
 
     for (const task of overdueTasks) {
@@ -61,6 +64,37 @@ router.post("/overdue", protect, adminOnly, async (req, res) => {
 
         notificationsSent += 1;
         notifiedUsers.add(assignee._id.toString());
+
+        if (assignee.email) {
+          const emailResult = await sendEmail({
+            to: assignee.email,
+            subject: `Overdue Task Reminder: ${task.taskCode}`,
+            text: `${task.taskCode} - ${task.title} is overdue.`,
+            html: `
+              <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+                <h2>Overdue Task Reminder</h2>
+                <p>Hello ${assignee.name},</p>
+                <p>The following task is overdue:</p>
+                <div style="border:1px solid #ddd; border-radius:12px; padding:16px; margin:16px 0;">
+                  <p><strong>Task:</strong> ${task.taskCode} - ${task.title}</p>
+                  <p><strong>Project:</strong> ${task.project?.name || "No project"}</p>
+                  <p><strong>Due Date:</strong> ${
+                    task.dueDate
+                      ? new Date(task.dueDate).toLocaleDateString("en-IN")
+                      : "No due date"
+                  }</p>
+                </div>
+                <p>Please login to Wohlig TaskBoard and update the task status.</p>
+              </div>
+            `
+          });
+
+          if (emailResult.sent) {
+            emailsSent += 1;
+          } else {
+            emailsFailed += 1;
+          }
+        }
       }
 
       task.activityLogs = task.activityLogs || [];
@@ -77,6 +111,8 @@ router.post("/overdue", protect, adminOnly, async (req, res) => {
       message: "Overdue reminders sent successfully.",
       overdueTasks: overdueTasks.length,
       notificationsSent,
+      emailsSent,
+      emailsFailed,
       usersNotified: notifiedUsers.size,
       tasks: overdueTasks.map((task) => ({
         _id: task._id,

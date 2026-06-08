@@ -19,6 +19,44 @@ const Profile = () => {
   const [passwordError, setPasswordError] = useState("");
   const [isChangingPassword, setIsChangingPassword] = useState(false);
 
+  const [emailForm, setEmailForm] = useState({
+    newEmail: "",
+    currentPassword: ""
+  });
+
+  const [emailMessage, setEmailMessage] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [isChangingEmail, setIsChangingEmail] = useState(false);
+
+  const changeEmail = async (e) => {
+    e.preventDefault();
+
+    setEmailMessage("");
+    setEmailError("");
+
+    try {
+      setIsChangingEmail(true);
+
+      const { data } = await API.put("/auth/update-email", emailForm);
+
+      setEmailMessage(data.message || "Email updated successfully");
+      setEmailForm({
+        newEmail: "",
+        currentPassword: ""
+      });
+
+      setTimeout(() => {
+        logout();
+      }, 1500);
+    } catch (error) {
+      setEmailError(
+        error.response?.data?.message || "Could not update email"
+      );
+    } finally {
+      setIsChangingEmail(false);
+    }
+  };
+
   const changePassword = async (e) => {
     e.preventDefault();
 
@@ -162,6 +200,62 @@ const Profile = () => {
                   <p className="text-sm text-slate-500 dark:text-neutral-400 mt-1">
                     Your project and task access is managed by the admin.
                   </p>
+                </div>
+
+                <div className="rounded-2xl bg-white dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 p-5">
+                  <p className="font-black text-slate-900 dark:text-white">
+                    Change Email
+                  </p>
+                  <p className="text-sm text-slate-500 dark:text-neutral-400 mt-1">
+                    Update your login email. You will be logged out after updating.
+                  </p>
+
+                  <form onSubmit={changeEmail} className="space-y-3 mt-4">
+                    <input
+                      type="email"
+                      value={emailForm.newEmail}
+                      onChange={(e) =>
+                        setEmailForm({
+                          ...emailForm,
+                          newEmail: e.target.value
+                        })
+                      }
+                      placeholder="New email address"
+                      className="input-modern"
+                    />
+
+                    <input
+                      type="password"
+                      value={emailForm.currentPassword}
+                      onChange={(e) =>
+                        setEmailForm({
+                          ...emailForm,
+                          currentPassword: e.target.value
+                        })
+                      }
+                      placeholder="Current password"
+                      className="input-modern"
+                    />
+
+                    {emailMessage && (
+                      <p className="text-sm font-bold text-emerald-600">
+                        {emailMessage}
+                      </p>
+                    )}
+
+                    {emailError && (
+                      <p className="text-sm font-bold text-red-600">
+                        {emailError}
+                      </p>
+                    )}
+
+                    <button
+                      disabled={isChangingEmail}
+                      className="btn-primary w-full disabled:opacity-50"
+                    >
+                      {isChangingEmail ? "Updating..." : "Update Email"}
+                    </button>
+                  </form>
                 </div>
 
                 <div className="rounded-2xl bg-white dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 p-5">
